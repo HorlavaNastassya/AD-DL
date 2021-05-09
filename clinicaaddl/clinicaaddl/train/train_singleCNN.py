@@ -140,3 +140,19 @@ def test_single_cnn(model, output_dir, data_loader, subset_name, split, criterio
         if mode in ["patch", "roi", "slice"]:
             soft_voting_to_tsvs(output_dir, split, logger=logger, selection=selection, mode=mode,
                                 dataset=subset_name, selection_threshold=selection_threshold)
+
+
+    model, last_epoch = load_model(model, os.path.join(output_dir, 'fold-%i' % split, 'models'),
+                                   gpu=gpu, filename='checkpoint.pth.tar')
+
+    results_df, metrics = test(model, data_loader, gpu, criterion, mode)
+    selection="last_checkpoint"
+    logger.info("%s level %s balanced accuracy is %f for model selected on %s"
+                % (mode, subset_name, metrics["balanced_accuracy"], selection))
+
+    mode_level_to_tsvs(output_dir, results_df, metrics, split, selection, mode, dataset=subset_name)
+
+    # Soft voting
+    if mode in ["patch", "roi", "slice"]:
+        soft_voting_to_tsvs(output_dir, split, logger=logger, selection=selection, mode=mode,
+                            dataset=subset_name, selection_threshold=selection_threshold)
