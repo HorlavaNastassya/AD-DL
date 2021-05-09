@@ -35,8 +35,8 @@ TRAIN_CATEGORIES = {
 
 def extract_tensors(args):
     import sys
-    from clinica.utils.stream import FilterOut
-    from clinica.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_cli import DeepLearningPrepareDataCLI
+    from clinicaml.utils.stream import FilterOut
+    from clinicaml.pipelines.deeplearning_prepare_data.deeplearning_prepare_data_cli import DeepLearningPrepareDataCLI
 
     sys.stdout = FilterOut(sys.stdout)
 
@@ -108,9 +108,32 @@ def rs_func(args):
 
 
 # Function to dispatch training to corresponding function
+def prepare_train_func(args):
+    from tools.deep_learning.iotools import return_logger, check_and_create, write_requirements_version
+    from tools.deep_learning.iotools import commandline_to_json
+
+    main_logger = return_logger(args.verbose, "main process")
+    args.output_dir = check_and_create(args.output_dir)
+    commandline_to_json(args, logger=main_logger)
+    write_requirements_version(args.output_dir)
+    
+    if args.network_type not in ["autoencoder", "cnn", "multicnn"]:
+        raise NotImplementedError('Framework %s not implemented in clinicaaddl' % args.network_type)
+    print("You can now run the experiment via executing the following command")
+    print("sbatch run_experiment.sh "+args.output_dir)
+
+
+# Function to dispatch training to corresponding function
 def train_func(args):
     from train import train_autoencoder, train_multi_cnn, train_single_cnn, resume_single_CNN
+    from tools.deep_learning.iotools import read_json
+    from tools.deep_learning.iotools import commandline_to_json
 
+    import os
+    args = read_json(args, json_path=os.path.join(args.output_dir, 'commandline.json'))
+    commandline_to_json(args, filename="commandline_train.json")
+
+    # options=Namespace(**vars(options, **vars(args)))
     if args.network_type == "autoencoder":
         args.transfer_learning_selection = "best_loss"
         train_autoencoder(args)
@@ -128,7 +151,7 @@ def train_func(args):
 # Function to dispatch command line options from classify to corresponding
 # function
 def classify_func(args):
-    from .classify.inference import classify
+    from classify.inference import classify
 
     classify(
         args.caps_directory,
@@ -140,19 +163,22 @@ def classify_func(args):
         prepare_dl=args.use_extracted_features,
         selection_metrics=args.selection_metrics,
         diagnoses=args.diagnoses,
-        verbose=args.verbose
+        verbose=args.verbose,
+        baseline=args.baseline
     )
 
 
 # Functions to dispatch command line options from tsvtool to corresponding
 # function
 def tsv_restrict_func(args):
-    from .tools.tsv.restriction import aibl_restriction, oasis_restriction
+    from tools.tsv.restriction import aibl_restriction, oasis_restriction, adni_restriction
 
     if args.dataset == "AIBL":
         aibl_restriction(args.merged_tsv, args.results_path)
     elif args.dataset == "OASIS":
         oasis_restriction(args.merged_tsv, args.results_path)
+    elif args.dataset == "ADNI":
+        adni_restriction(args.merged_tsv, args.results_path, args.magnet_strength)
 
 
 def tsv_getlabels_func(args):
@@ -373,8 +399,8 @@ def parse_command_line():
     # generate_shepplogan_parser.set_defaults(func=generate_data_func)
 
     # Preprocessing
-    from clinica.pipelines.t1_linear.t1_linear_cli import T1LinearCLI
-    from clinica.engine.cmdparser import init_cmdparser_objects
+    from clinicaml.pipelines.t1_linear.t1_linear_cli import T1LinearCLI
+    from clinicaml.engine.cmdparser import init_cmdparser_objects
     from preprocessing.t1_extensive.t1_extensive_cli import T1ExtensiveCli
     preprocessing_parser = subparser.add_parser(
         'preprocessing',
@@ -640,16 +666,66 @@ def parse_command_line():
 
     train_parser = subparser.add_parser(
         'train',
-        help='Train with your data and create a model.')
+        help='Train with your data and create a model.',
+        parents=[parent_parser]
+    )
 
-    train_subparser = train_parser.add_subparsers(
+    train_parser.add_argument(
+        '-r', '--resume',
+        help='Flag to resume training',
+        type=str2bool, default=False)
+
+    train_parser.required = True
+    train_pos_group = train_parser.add_argument_group(
+        TRAIN_CATEGORIES["POSITIONAL"])
+
+    train_pos_group.add_argument(
+        "output_dir", type=str,
+        help="Directory from which configs are read and in which the new job is stored.")
+
+    train_comput_group = train_parser.add_argument_group(
+        TRAIN_CATEGORIES["COMPUTATIONAL"])
+    train_comput_group.add_argument(
+        '-cpu', '--use_cpu', action='store_true',
+        help='If provided, will use CPU instead of GPU.',
+        default=False)
+    train_comput_group.add_argument(
+        '-np', '--nproc',
+        help='Number of cores used during the training. (default=2)',
+        type=int, default=2)
+
+    train_comput_group.add_argument(
+        '--batch_size',
+        default=2, type=int,
+        help='Batch size for training. (default=2)')
+
+    train_cv_group = train_parser.add_argument_group(
+        TRAIN_CATEGORIES["CROSS-VALIDATION"])
+    train_cv_group.add_argument(
+        '--n_splits',
+        help='If a value is given will load data of a k-fold CV. Else will load a single split.',
+        type=int, default=None)
+    train_cv_group.add_argument(
+        '--split',
+        help='Train the list of given folds. By default train all folds.',
+        type=int, default=None, nargs='+')
+    train_parser.set_defaults(func=train_func)
+
+
+    # Prepare model dir for training
+
+    prepare_train_parser = subparser.add_parser(
+        'prepare_train',
+        help='Save configs to train with your data and create a model.')
+
+    prepare_train_subparser = prepare_train_parser.add_subparsers(
         title='''Inputs types implemented in clinicaaddl''',
         description='''What type of input do you want to use?
                 (image, patch, roi, slice).''',
         dest='mode',
         help='''****** Input types proposed by clinicaaddl ******''')
 
-    train_subparser.required = True
+    prepare_train_subparser.required = True
 
     # Transfer learning
     transfer_learning_parent = argparse.ArgumentParser(add_help=False)
@@ -673,7 +749,7 @@ def parse_command_line():
     ######################
     # IMAGE
     ######################
-    train_image_parser = train_subparser.add_parser(
+    train_image_parser = prepare_train_subparser.add_parser(
         "image",
         help="Train a 3D image-level network.")
 
@@ -693,7 +769,7 @@ def parse_command_line():
             transfer_learning_parent],
         help="Train an image-level autoencoder.")
 
-    train_image_ae_parser.set_defaults(func=train_func)
+    train_image_ae_parser.set_defaults(func=prepare_train_func)
 
     train_image_cnn_parser = train_image_subparser.add_parser(
         "cnn",
@@ -707,16 +783,13 @@ def parse_command_line():
         '--transfer_learning_selection',
         help="If transfer_learning from CNN, chooses which best transfer model is selected.",
         type=str, default="best_balanced_accuracy", choices=["best_loss", "best_balanced_accuracy"])
-    train_image_cnn_parser.add_argument(
-        '-r', '--resume',
-        help='Flag to resume training',
-        type=str2bool, default=False)
-    train_image_cnn_parser.set_defaults(func=train_func)
+
+    train_image_cnn_parser.set_defaults(func=prepare_train_func)
 
     #########################
     # PATCH
     #########################
-    train_patch_parser = train_subparser.add_parser(
+    train_patch_parser = prepare_train_subparser.add_parser(
         "patch",
         help="Train a 3D patch-level network.")
 
@@ -749,7 +822,7 @@ def parse_command_line():
         parents=[parent_parser, train_parent_parser, train_patch_parent, autoencoder_parent, transfer_learning_parent],
         help="Train a 3D patch-level autoencoder.")
 
-    train_patch_ae_parser.set_defaults(func=train_func)
+    train_patch_ae_parser.set_defaults(func=prepare_train_func)
 
     train_patch_cnn_parser = train_patch_subparser.add_parser(
         "cnn",
@@ -774,7 +847,7 @@ def parse_command_line():
              accuracy > threshold. Default corresponds to no selection.''',
         type=float, default=0.0)
 
-    train_patch_cnn_parser.set_defaults(func=train_func)
+    train_patch_cnn_parser.set_defaults(func=prepare_train_func)
 
     train_patch_multicnn_parser = train_patch_subparser.add_parser(
         "multicnn",
@@ -799,12 +872,12 @@ def parse_command_line():
                  accuracy > threshold. Default corresponds to no selection.''',
         type=float, default=0.0)
 
-    train_patch_multicnn_parser.set_defaults(func=train_func)
+    train_patch_multicnn_parser.set_defaults(func=prepare_train_func)
 
     #########################
     # ROI
     #########################
-    train_roi_parser = train_subparser.add_parser(
+    train_roi_parser = prepare_train_subparser.add_parser(
         "roi",
         help="Train a ROI-based level network.")
 
@@ -825,7 +898,7 @@ def parse_command_line():
         ],
         help="Train a ROI-based autoencoder.")
 
-    train_roi_ae_parser.set_defaults(func=train_func)
+    train_roi_ae_parser.set_defaults(func=prepare_train_func)
 
     train_roi_cnn_parser = train_roi_subparser.add_parser(
         "cnn",
@@ -849,7 +922,7 @@ def parse_command_line():
              accuracy > threshold. Default corresponds to no selection.''',
         type=float, default=0.0)
 
-    train_roi_cnn_parser.set_defaults(func=train_func)
+    train_roi_cnn_parser.set_defaults(func=prepare_train_func)
 
     train_roi_multicnn_parser = train_roi_subparser.add_parser(
         "multicnn",
@@ -873,12 +946,12 @@ def parse_command_line():
                          accuracy > threshold. Default corresponds to no selection.''',
         type=float, default=0.0)
 
-    train_roi_multicnn_parser.set_defaults(func=train_func)
+    train_roi_multicnn_parser.set_defaults(func=prepare_train_func)
 
     #########################
     # SLICE
     #########################
-    train_slice_parser = train_subparser.add_parser(
+    train_slice_parser = prepare_train_subparser.add_parser(
         "slice",
         help="Train a 2D slice-level CNN.")
 
@@ -917,7 +990,7 @@ def parse_command_line():
         parents=[parent_parser, train_parent_parser, train_slice_parent, transfer_learning_parent],
         help="Train a 2D slice-level autoencoder.")
 
-    train_slice_ae_parser.set_defaults(func=train_func)
+    train_slice_ae_parser.set_defaults(func=prepare_train_func)
 
     train_slice_cnn_parser = train_slice_subparser.add_parser(
         "cnn",
@@ -938,7 +1011,7 @@ def parse_command_line():
                  accuracy > threshold. Default corresponds to no selection.''',
         type=float, default=0.0)
 
-    train_slice_cnn_parser.set_defaults(func=train_func)
+    train_slice_cnn_parser.set_defaults(func=prepare_train_func)
 
     train_slice_multicnn_parser = train_slice_subparser.add_parser(
         "multicnn",
@@ -959,7 +1032,7 @@ def parse_command_line():
                  accuracy > threshold. Default corresponds to no selection.''',
         type=float, default=0.0)
 
-    train_slice_multicnn_parser.set_defaults(func=train_func)
+    train_slice_multicnn_parser.set_defaults(func=prepare_train_func)
 
     # Classify - Classify a subject or a list of tsv files with the CNN
     # provided as argument.
@@ -1025,14 +1098,18 @@ def parse_command_line():
         '--selection_metrics',
         help='''List of metrics to find the best models to evaluate. Default will
         classify best model based on balanced accuracy.''',
-        choices=['loss', 'balanced_accuracy'],
-        default=['balanced_accuracy'],
+        choices=['loss', 'balanced_accuracy', "last_checkpoint"],
+        default=['balanced_accuracy', 'loss'],
         nargs='+'
     )
     classify_specific_group.add_argument(
         "--diagnoses",
         help="List of participants that will be classified.",
         nargs="+", type=str, choices=['AD', 'CN', 'MCI', 'sMCI', 'pMCI'], default=None)
+
+    classify_specific_group.add_argument(
+        "--baseline",
+        help="Specify if baseline", type=str2bool, default=True)
 
     classify_parser.set_defaults(func=classify_func)
 
@@ -1056,17 +1133,24 @@ def parse_command_line():
     tsv_restrict_subparser.add_argument(
         "dataset",
         help="dataset on which the restriction is performed.",
-        choices=["AIBL", "OASIS"],
+        choices=["AIBL", "OASIS", "ADNI"],
         type=str)
+
 
     tsv_restrict_subparser.add_argument(
         "merged_tsv",
         help="Path to the file obtained by the command clinica iotools merge-tsv.",
         type=str)
+
     tsv_restrict_subparser.add_argument(
         "results_path",
         help="Path to the output tsv file (filename included).",
         type=str)
+
+    tsv_restrict_subparser.add_argument(
+        "--magnet_strength", "-ms",
+        help="Strength of magnet field by which one wants to restrict scans",
+        type=float, default=1.5)
 
     tsv_restrict_subparser.set_defaults(func=tsv_restrict_func)
 
@@ -1270,7 +1354,7 @@ def parse_command_line():
         "--target_diagnosis", default=None, type=str,
         help="Which class the gradients explain. If None is given will be equal to diagnosis.")
     interpret_data_group.add_argument(
-        "--baseline", action="store_true", default=False,
+        "--baseline", action="store_true", default=True,
         help="If provided, only the baseline sessions are used for training.")
     interpret_data_group.add_argument(
         "--keep_true", type=lambda x: bool(strtobool(x)), default=None,
@@ -1339,14 +1423,14 @@ def return_train_parent_parser(retrain=False):
 
     train_comput_group = train_parent_parser.add_argument_group(
         TRAIN_CATEGORIES["COMPUTATIONAL"])
-    train_comput_group.add_argument(
-        '-cpu', '--use_cpu', action='store_true',
-        help='If provided, will use CPU instead of GPU.',
-        default=False)
-    train_comput_group.add_argument(
-        '-np', '--nproc',
-        help='Number of cores used during the training. (default=2)',
-        type=int, default=2)
+    # train_comput_group.add_argument(
+    #     '-cpu', '--use_cpu', action='store_true',
+    #     help='If provided, will use CPU instead of GPU.',
+    #     default=False)
+    # train_comput_group.add_argument(
+    #     '-np', '--nproc',
+    #     help='Number of cores used during the training. (default=2)',
+    #     type=int, default=2)
     train_comput_group.add_argument(
         '--batch_size',
         default=2, type=int,
@@ -1374,8 +1458,8 @@ def return_train_parent_parser(retrain=False):
         default=None if retrain else ['AD', 'CN'], nargs='+', type=str, choices=['AD', 'CN', 'MCI', 'sMCI', 'pMCI'])
     train_data_group.add_argument(
         '--baseline',
-        help='If provided, only the baseline sessions are used for training.',
-        action="store_true",
+        help='If True, only the baseline sessions are used for training.',
+        type=str2bool,
         default=None if retrain else False)
     train_data_group.add_argument(
         '--unnormalize', '-un',
@@ -1394,17 +1478,6 @@ def return_train_parent_parser(retrain=False):
         '--sampler', '-s',
         help="Sampler choice (random, or weighted for imbalanced datasets)",
         default="random", type=str, choices=["random", "weighted"])
-
-    train_cv_group = train_parent_parser.add_argument_group(
-        TRAIN_CATEGORIES["CROSS-VALIDATION"])
-    train_cv_group.add_argument(
-        '--n_splits',
-        help='If a value is given will load data of a k-fold CV. Else will load a single split.',
-        type=int, default=None)
-    train_cv_group.add_argument(
-        '--split',
-        help='Train the list of given folds. By default train all folds.',
-        type=int, default=None, nargs='+')
 
     train_optim_group = train_parent_parser.add_argument_group(
         TRAIN_CATEGORIES["OPTIMIZATION"])
@@ -1437,11 +1510,11 @@ def return_train_parent_parser(retrain=False):
         help='Accumulates gradients during the given number of iterations before performing the weight update '
              'in order to virtually increase the size of the batch.',
         default=None if retrain else 1, type=int)
-    # train_optim_group.add_argument(
-    #     "--loss",
-    #     help="Replaces default losses: cross-entropy for CNN and MSE for autoencoders.",
-    #     type=str, default=None if retrain else "default",
-    #     choices=["default", "L1", "L1Norm", "SmoothL1", "SmoothL1Norm"])
+    train_optim_group.add_argument(
+        "--loss",
+        help="Replaces default losses: cross-entropy for CNN and MSE for autoencoders.",
+        type=str, default=None if retrain else "default",
+        choices=["default", "WeightedCrossEntropy", "L1", "L1Norm", "SmoothL1", "SmoothL1Norm"])
 
     return train_parent_parser
 

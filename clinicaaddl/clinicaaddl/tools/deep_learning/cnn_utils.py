@@ -46,6 +46,12 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
 
     if logger is None:
         logger = logging
+    
+    #clear cache
+    import gc
+    gc.collect()
+    if options.gpu:
+        torch.cuda.empty_cache()
 
     columns = ['epoch', 'iteration', 'time',
                'balanced_accuracy_train', 'loss_train',
@@ -115,9 +121,9 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
                 optimizer.zero_grad()
 
                 del loss
-
                 # Evaluate the model only when no gradients are accumulated
                 if options.evaluation_steps != 0 and (i + 1) % options.evaluation_steps == 0:
+
                     evaluation_flag = False
 
                     _, results_train = test(model, train_loader, options.gpu, criterion)
@@ -145,8 +151,10 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
                     row_df = pd.DataFrame([row], columns=columns)
                     with open(filename, 'a') as f:
                         row_df.to_csv(f, header=False, index=False, sep='\t')
-
+#             if options.gpu:
+#                 torch.cuda.empty_cache()
             tend = time()
+            
         logger.debug('Mean time per batch loading: %.10f s'
                      % (total_time / len(train_loader) * train_loader.batch_size))
 
@@ -211,8 +219,8 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
 
         epoch += 1
 
-    os.remove(os.path.join(model_dir, "optimizer.pth.tar"))
-    os.remove(os.path.join(model_dir, "checkpoint.pth.tar"))
+    # os.remove(os.path.join(model_dir, "optimizer.pth.tar"))
+    # os.remove(os.path.join(model_dir, "checkpoint.pth.tar"))
 
 
 def evaluate_prediction(y, y_pred):
@@ -234,6 +242,7 @@ def evaluate_prediction(y, y_pred):
 
     accuracy = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
 
+    #same as recall
     if (true_positive + false_negative) != 0:
         sensitivity = true_positive / (true_positive + false_negative)
     else:
@@ -244,6 +253,7 @@ def evaluate_prediction(y, y_pred):
     else:
         specificity = 0.0
 
+    # precision
     if (true_positive + false_positive) != 0:
         ppv = true_positive / (true_positive + false_positive)
     else:
@@ -256,12 +266,18 @@ def evaluate_prediction(y, y_pred):
 
     balanced_accuracy = (sensitivity + specificity) / 2
 
+    if (ppv + sensitivity) != 0:
+        f1_score=2*(ppv*sensitivity)/(ppv+sensitivity)
+    else:
+        f1_score=0
+
     results = {'accuracy': accuracy,
                'balanced_accuracy': balanced_accuracy,
                'sensitivity': sensitivity,
                'specificity': specificity,
-               'ppv': ppv,
+               'precision': ppv,
                'npv': npv,
+               'f1-score':f1_score
                }
 
     return results
@@ -309,8 +325,10 @@ def test(model, dataloader, use_cuda, criterion, mode="image", use_labels=True):
             if use_labels:
                 loss = criterion(outputs, labels)
                 total_loss += loss.item()
-            _, predicted = torch.max(outputs.data, 1)
-
+            if mode == "image":
+                _, predicted = torch.max(softmax(outputs).data, 1)
+            else:
+                _, predicted = torch.max(outputs.data, 1)
             # Generate detailed DataFrame
             for idx, sub in enumerate(data['participant_id']):
                 if mode == "image":
@@ -604,10 +622,12 @@ class SmoothL1ClassificationLoss(_Loss):
         return F.smooth_l1_loss(input, binarize_target)
 
 
-def get_criterion(option):
+def get_criterion(option, classWights):
     """Returns the appropriate loss depending on the option"""
     if option == "default":
         return torch.nn.CrossEntropyLoss()
+    elif option == "WeightedCrossEntropy" or option == "L1":
+        return torch.nn.CrossEntropyLoss(weight=classWights)
     elif option == "L1Norm" or option == "L1":
         return L1ClassificationLoss(reduction="mean", normalization=(option == "L1Norm"))
     elif option == "SmoothL1Norm" or option == "SmoothL1":
@@ -615,6 +635,12 @@ def get_criterion(option):
     else:
         raise ValueError("The option %s is unknown for criterion selection" % option)
 
+def get_classWeights(params, df):
+    device = torch.device("cpu" if params.use_cpu else "cuda")
+    nSamples = [len(df[df["diagnosis"].isin([i])]) for i in params.diagnoses]
+    normedWeights = [1 - (x / sum(nSamples)) for x in nSamples]
+    normedWeights = torch.FloatTensor(normedWeights).to(device)
+    return normedWeights
 
 def binarize_label(y, classes, pos_label=1, neg_label=0):
     """Greatly inspired from scikit-learn"""

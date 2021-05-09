@@ -38,7 +38,9 @@ def return_logger(verbose, name_fn):
     return logger
 
 
-computational_list = ['gpu', 'batch_size', 'num_workers', 'evaluation_steps']
+# computational_list = ['gpu', 'batch_size', 'num_workers', 'evaluation_steps', 'nproc']
+computational_list = ['gpu', 'batch_size', 'num_workers', 'nproc']
+
 
 
 def write_requirements_version(output_path):
@@ -91,19 +93,31 @@ def translate_parameters(args):
 def check_and_clean(d):
     import shutil
     import os
+    if os.path.exists(d):
+        shutil.rmtree(d)
+    os.makedirs(d)
+
+
+def check_and_create(d):
+    import os
     import datetime
     try:
         os.makedirs(d, exist_ok=False)
+        dir_split=os.path.split(d)
+        name=dir_split[1]
+        print("Directory was succesfully created at \n"+d)
+#         print("Directory name:\n"+name)
     except OSError as error:
         dir_split=os.path.split(d)
-        d = os.path.join(dir_split[0], dir_split[1] + '_' + datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
-        print("Directory can not be created. This foder already exists,  directory name was changed into "+d)
+        name=dir_split[1] + '_' + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        d = os.path.join(dir_split[0],name)
+        print("Directory can not be created. This foder already exists, directory name was changed into \n"+d)
+#         print("Directory name:\n"+name)
         os.makedirs(d)
 
     return d
 
-
-def commandline_to_json(commandline, logger=None):
+def commandline_to_json(commandline, logger=None, filename="commandline.json"):
     """
     This is a function to write the python argparse object into a json file.
     This helps for DL when searching for hyperparameters
@@ -145,8 +159,8 @@ def commandline_to_json(commandline, logger=None):
 
     # save to json file
     json = json.dumps(commandline_arg_dict, skipkeys=True, indent=4)
-    logger.info("Path of json file: %s" % os.path.join(output_dir, "commandline.json"))
-    with open(os.path.join(output_dir, "commandline.json"), "w") as f:
+    logger.info("Path of json file: %s" % os.path.join(output_dir, filename))
+    with open(os.path.join(output_dir, filename), "w") as f:
         f.write(json)
 
 
@@ -177,10 +191,11 @@ def read_json(options, json_path=None, test=False):
     for key, item in json_data.items():
         # We do not change computational options
         if key in computational_list:
-            pass
+            continue
+            # pass
         # If used for evaluation, some parameters were already given
         if test and key in evaluation_parameters:
-            pass
+            continue
         else:
             setattr(options, key, item)
 
