@@ -1420,6 +1420,10 @@ def return_train_parent_parser(retrain=False):
             'model',
             help='CNN Model to be used during the training.',
             default='Conv5_FC3')
+        train_pos_group.add_argument(
+            '--bayesian',
+            help='Defines if Bayesian wrapper will be used for network',type=str2bool,
+            default=False)
 
     train_comput_group = train_parent_parser.add_argument_group(
         TRAIN_CATEGORIES["COMPUTATIONAL"])

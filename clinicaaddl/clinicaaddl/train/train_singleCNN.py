@@ -54,6 +54,12 @@ def train_single_cnn(params):
 
     for fi in fold_iterator:
         main_logger.info("Fold %i" % fi)
+        # Initialize the model
+        main_logger.info('Initialization of the model')
+        model = init_model(params, initial_shape=None)
+        model = transfer_learning(model, fi, source_path=params.transfer_learning_path,
+                                  gpu=params.gpu, selection=params.transfer_learning_selection,
+                                  logger=main_logger)
 
         training_df, valid_df = load_data(
             params.tsv_path,
@@ -89,12 +95,7 @@ def train_single_cnn(params):
             pin_memory=True
         )
 
-        # Initialize the model
-        main_logger.info('Initialization of the model')
-        model = init_model(params, initial_shape=data_train.size)
-        model = transfer_learning(model, fi, source_path=params.transfer_learning_path,
-                                  gpu=params.gpu, selection=params.transfer_learning_selection,
-                                  logger=main_logger)
+
 
         # Define criterion and optimizer
 
