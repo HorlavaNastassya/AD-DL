@@ -4,9 +4,10 @@ from .image_level import Conv5_FC3, Conv5_FC3_mni, Conv6_FC3, ResNet18, SEResNet
 from .patch_level import Conv4_FC3
 from .slice_level import resnet18, ConvNet
 from .random import RandomArchitecture
+from .bayesian_wrapper import BayesianWrapper
 
 
-def create_model(options, initial_shape):
+def create_model(options, initial_shape=(1,128,128,128)):
     """
     Creates model object from the model_name.
 
@@ -28,6 +29,10 @@ def create_model(options, initial_shape):
         except NameError:
             raise NotImplementedError(
                 'The model wanted %s has not been implemented.' % options.model)
+    if options.bayesian:
+        model=BayesianWrapper(model)
+    # from torchsummary import summary
+    # summary(model, (1,128,128,128))
 
     if options.gpu:
         model.cuda()
