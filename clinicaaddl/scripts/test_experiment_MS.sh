@@ -1,4 +1,16 @@
 #!/bin/bash
+#SBATCH --gres=gpu:v100:1
+#SBATCH --constraint="gpu"
+#SBATCH --time=01:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=92500
+#SBATCH --mail-type=END
+#SBATCH --mail-user=g.nasta.work@gmail.com
+#SBATCH -o logs/test_%j.out
+#SBATCH -e logs/test_%j.err
+
 module load anaconda/3/2020.02
 module load cuda/10.2
 module load pytorch/gpu/1.6.0
@@ -38,14 +50,14 @@ do
             echo -e "$f"
             python $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TSV_PATH $f $POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint
             
-            if [MS=="1.5T"]; then
+            if [MS="1.5T"]; then
                 TEST_MS="3T"
                 TEST_POSTFIX="test_${TEST_MS}"
                 TEST_TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments/Experiments-${TEST_MS}/labels/"
                 python $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TEST_TSV_PATH $f $TEST_POSTFIX  --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint --baseline False
             fi
             
-            if [MS=="3T"]; then
+            if [MS="3T"]; then
                 TEST_MS="1.5T"
                 TEST_POSTFIX="test_${TEST_MS}"
                 TEST_TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments/Experiments-${TEST_MS}/labels/"

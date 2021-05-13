@@ -398,7 +398,7 @@ def test_bayesian(model, dataloader, use_cuda, criterion, use_labels=True, nbr_b
                 if use_labels:
                     loss = criterion(outputs, labels)
                     batch_loss += loss.item()
-                output_batch.append(outputs.numpy())
+                output_batch.append(outputs.cpu().numpy())
             if use_labels:
                 total_loss += (batch_loss / nbr_bayesian_iter)
             output_batch=np.transpose(np.array(output_batch), (1, 0, 2))
@@ -528,12 +528,11 @@ def bayesian_predicions_to_tsvs(output_dir, bayesian_predictions_list, fold, sel
     """
 
     for i, bayesian_predictions_df in enumerate(bayesian_predictions_list):
-        performance_dir = os.path.join(output_dir, 'fold-%i' % fold, 'cnn_classification', 'bayesian_predictions', 'prediction-%i' % i,
-                                       selection, dataset)
+        performance_dir = os.path.join(output_dir, 'fold-%i' % fold, 'cnn_classification', 'bayesian_predictions', selection, dataset)
 
         os.makedirs(performance_dir, exist_ok=True)
 
-        bayesian_predictions_df.to_csv(os.path.join(performance_dir, '%s_%s_level_prediction.tsv' % (dataset, mode)), index=False,
+        bayesian_predictions_df.to_csv(os.path.join(performance_dir, '%s_%s_level_prediction_%s.tsv' % (dataset, mode, i)), index=False,
                           sep='\t')
 
 
