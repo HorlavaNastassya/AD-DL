@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath('./'))
 from tools.deep_learning import create_model, load_model, read_json
 from tools.deep_learning.iotools import return_logger, translate_parameters
 from tools.deep_learning.data import return_dataset, get_transforms, compute_num_cnn, load_data_test
-from tools.deep_learning.cnn_utils import test, soft_voting_to_tsvs, mode_level_to_tsvs, get_criterion, get_classWeights
+from tools.deep_learning.cnn_utils import test, test_bayesian, soft_voting_to_tsvs, mode_level_to_tsvs, get_criterion, get_classWeights, bayesian_predicions_to_tsvs
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
@@ -27,7 +27,10 @@ def classify(caps_dir,
              selection_metrics=None,
              diagnoses=None,
              verbose=0,
-             baseline=True):
+             baseline=True,
+             bayesian=False,
+             nbr_bayesian_iter=None
+             ):
     """
     This function verifies the input folders, and the existence of the json file
     then it launch the inference stage from a specific model.
@@ -93,7 +96,9 @@ def classify(caps_dir,
         selection_metrics,
         diagnoses,
         logger,
-        baseline
+        baseline,
+        bayesian,
+        nbr_bayesian_iter
     )
 
 
@@ -110,7 +115,10 @@ def inference_from_model(caps_dir,
                          selection_metrics=None,
                          diagnoses=None,
                          logger=None,
-                         baseline=True):
+                         baseline=True,
+                         bayesian=False,
+                         nbr_bayesian_iter=None
+                         ):
     """
     Inference from previously trained model.
 
@@ -219,6 +227,10 @@ def inference_from_model(caps_dir,
 
             makedirs(performance_dir, exist_ok=True)
 
+            if bayesian != options.bayesian:
+                print("You provided the network type as bayesian %str, but your network was trained as bayesian %str"%(bayesian, options.bayesian))
+                print("Algoritm will use the parameters used during training")
+                bayesian=options.bayesian
             # It launch the corresponding function, depending on the mode.
             inference_from_model_generic(
                 caps_dir,
@@ -232,7 +244,9 @@ def inference_from_model(caps_dir,
                 labels=labels,
                 num_cnn=num_cnn,
                 logger=logger,
-                baseline=baseline
+                baseline=baseline,
+                bayesian=bayesian,
+                nbr_bayesian_iter=nbr_bayesian_iter
             )
 
             # Soft voting
@@ -254,7 +268,9 @@ def inference_from_model(caps_dir,
 
 def inference_from_model_generic(caps_dir, tsv_path, model_path, model_options,
                                  prefix, output_dir, fold, selection,
-                                 labels=True, num_cnn=None, logger=None, baseline=True):
+                                 labels=True, num_cnn=None, logger=None, baseline=True,
+                                 bayesian=False, nbr_bayesian_iter=None
+                                 ):
     from os.path import join
     import logging
 
@@ -364,14 +380,29 @@ def inference_from_model_generic(caps_dir, tsv_path, model_path, model_options,
             gpu, filename=filename)
 
         # Run the model on the data
-        predictions_df, metrics = test(
-            best_model,
-            test_loader,
-            gpu,
-            criterion,
-            mode=model_options.mode,
-            use_labels=labels
-        )
+        if bayesian:
+
+            predictions_df, metrics, bayesian_predictions_list = test_bayesian(
+                best_model,
+                test_loader,
+                gpu,
+                criterion,
+                use_labels=labels,
+                nbr_bayesian_iter=nbr_bayesian_iter,
+            )
+
+            bayesian_predicions_to_tsvs(output_dir, bayesian_predictions_list, fold, selection, model_options.mode,
+                               dataset=prefix)
+
+        else:
+            predictions_df, metrics = test(
+                best_model,
+                test_loader,
+                gpu,
+                criterion,
+                mode=model_options.mode,
+                use_labels=labels
+            )
 
         if labels:
             logger.info("%s level %s balanced accuracy is %f for model selected on %s"
@@ -379,3 +410,4 @@ def inference_from_model_generic(caps_dir, tsv_path, model_path, model_options,
 
         mode_level_to_tsvs(output_dir, predictions_df, metrics, fold, selection, model_options.mode,
                            dataset=prefix)
+

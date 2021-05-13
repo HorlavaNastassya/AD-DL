@@ -164,7 +164,9 @@ def classify_func(args):
         selection_metrics=args.selection_metrics,
         diagnoses=args.diagnoses,
         verbose=args.verbose,
-        baseline=args.baseline
+        baseline=args.baseline,
+        bayesian=args.bayesian,
+        nbr_bayesian_iter=args.nbr_bayesian_iter if args.bayesian else None
     )
 
 
@@ -1043,6 +1045,16 @@ def parse_command_line():
         parents=[parent_parser],
         help='''Classify one image or a list of images with your previously
                  trained model.''')
+
+    classify_image_bayesian = classify_parser.add_argument_group("Bayesian Network", "Specifications for testing of Bayesian Network")
+    classify_image_bayesian.add_argument(
+        "--bayesian",
+        help="Specify if classify bayesian network", type=str2bool, default=False)
+
+    classify_image_bayesian.add_argument(
+        "--nbr_bayesian_iter",
+        help="Number of iterations for bayesian network", type=int, default=5)
+
     classify_pos_group = classify_parser.add_argument_group(
         TRAIN_CATEGORIES["POSITIONAL"])
     classify_pos_group.add_argument(
@@ -1110,6 +1122,8 @@ def parse_command_line():
     classify_specific_group.add_argument(
         "--baseline",
         help="Specify if baseline", type=str2bool, default=True)
+
+
 
     classify_parser.set_defaults(func=classify_func)
 

@@ -46,8 +46,8 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
 
     if logger is None:
         logger = logging
-    
-    #clear cache
+
+    # clear cache
     import gc
     gc.collect()
     if options.gpu:
@@ -123,7 +123,6 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
                 del loss
                 # Evaluate the model only when no gradients are accumulated
                 if options.evaluation_steps != 0 and (i + 1) % options.evaluation_steps == 0:
-
                     evaluation_flag = False
 
                     _, results_train = test(model, train_loader, options.gpu, criterion)
@@ -151,10 +150,10 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
                     row_df = pd.DataFrame([row], columns=columns)
                     with open(filename, 'a') as f:
                         row_df.to_csv(f, header=False, index=False, sep='\t')
-#             if options.gpu:
-#                 torch.cuda.empty_cache()
+            #             if options.gpu:
+            #                 torch.cuda.empty_cache()
             tend = time()
-            
+
         logger.debug('Mean time per batch loading: %.10f s'
                      % (total_time / len(train_loader) * train_loader.batch_size))
 
@@ -242,7 +241,7 @@ def evaluate_prediction(y, y_pred):
 
     accuracy = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
 
-    #same as recall
+    # same as recall
     if (true_positive + false_negative) != 0:
         sensitivity = true_positive / (true_positive + false_negative)
     else:
@@ -267,9 +266,9 @@ def evaluate_prediction(y, y_pred):
     balanced_accuracy = (sensitivity + specificity) / 2
 
     if (ppv + sensitivity) != 0:
-        f1_score=2*(ppv*sensitivity)/(ppv+sensitivity)
+        f1_score = 2 * (ppv * sensitivity) / (ppv + sensitivity)
     else:
-        f1_score=0
+        f1_score = 0
 
     results = {'accuracy': accuracy,
                'balanced_accuracy': balanced_accuracy,
@@ -277,13 +276,13 @@ def evaluate_prediction(y, y_pred):
                'specificity': specificity,
                'precision': ppv,
                'npv': npv,
-               'f1-score':f1_score
+               'f1-score': f1_score
                }
 
     return results
 
 
-def test(model, dataloader, use_cuda, criterion, mode="image", use_labels=True):
+def test(model, dataloader, use_cuda, criterion, mode="image", use_labels=True, bayesian=True, nbr_bayesian_iter=5):
     """
     Computes the predictions and evaluation metrics.
 
@@ -358,6 +357,84 @@ def test(model, dataloader, use_cuda, criterion, mode="image", use_labels=True):
     return results_df, metrics_dict
 
 
+def test_bayesian(model, dataloader, use_cuda, criterion, use_labels=True, nbr_bayesian_iter=10):
+    from scipy.stats import mode
+    """
+    Computes the predictions and evaluation metrics.
+    ! Only for mode="image"
+    Args:
+        model: (Module) CNN to be tested.
+        dataloader: (DataLoader) wrapper of a dataset.
+        use_cuda: (bool) if True a gpu is used.
+        criterion: (loss) function to calculate the loss.
+        use_labels (bool): If True the true_label will be written in output DataFrame and metrics dict will be created.
+    Returns
+        (DataFrame) results of each input.
+        (dict) ensemble of metrics + total loss on mode level.
+    """
+    model.eval()
+    dataloader.dataset.eval()
+
+    columns = ["participant_id", "session_id", "true_label", "predicted_label"]
+
+
+    bayesian_columns=["participant_id", "session_id", "true_label", "predicted_column_0", "predicted_column_1"]
+    softmax = torch.nn.Softmax(dim=1)
+    results_df = pd.DataFrame(columns=columns)
+    results_bayesian_list=[pd.DataFrame(columns=bayesian_columns) for i in range(nbr_bayesian_iter)]
+    total_loss = 0
+    with torch.no_grad():
+        for i, data in enumerate(dataloader, 0):
+            if use_cuda:
+                inputs, labels = data['image'].cuda(), data['label'].cuda()
+            else:
+                inputs, labels = data['image'], data['label']
+
+            # test several times (nbr_of_bayesian_iter)
+            output_batch = []
+            batch_loss = 0
+            for bayesian_iteration in range(nbr_bayesian_iter):
+                outputs = softmax(model(inputs).data)
+                if use_labels:
+                    loss = criterion(outputs, labels)
+                    batch_loss += loss.item()
+                output_batch.append(outputs.numpy())
+            if use_labels:
+                total_loss += (batch_loss / nbr_bayesian_iter)
+            output_batch=np.transpose(np.array(output_batch), (1, 0, 2))
+            predicted_classes = np.argmax(output_batch, axis=-1)
+            predicted, fract_predicted = np.squeeze(mode(predicted_classes, axis=1), axis=-1)
+
+
+            # Generate detailed DataFrame
+            for idx, sub in enumerate(data['participant_id']):
+
+                row = [[sub, data['session_id'][idx], labels[idx].item(), predicted[idx]]]
+                row_df = pd.DataFrame(row, columns=columns)
+                results_df = pd.concat([results_df, row_df])
+
+                for bayesian_iteration in range(nbr_bayesian_iter):
+                    row_bayes = [[sub, data['session_id'][idx], labels[idx].item(), output_batch[idx][bayesian_iteration][0], output_batch[idx][bayesian_iteration][1]]]
+                    row_bayes_df = pd.DataFrame(row_bayes, columns=bayesian_columns)
+                    results_bayesian_list[bayesian_iteration] = pd.concat([results_bayesian_list[bayesian_iteration], row_bayes_df])
+
+            del inputs, outputs, labels
+        results_df.reset_index(inplace=True, drop=True)
+        for bayesian_iteration in range(nbr_bayesian_iter):
+            results_bayesian_list[bayesian_iteration].reset_index(inplace=True, drop=True)
+
+    if not use_labels:
+        results_df = results_df.drop("true_label", axis=1)
+        metrics_dict = None
+    else:
+        metrics_dict = evaluate_prediction(results_df.true_label.values.astype(int),
+                                           results_df.predicted_label.values.astype(int))
+        metrics_dict['total_loss'] = total_loss
+    torch.cuda.empty_cache()
+
+    return results_df, metrics_dict, results_bayesian_list
+
+
 def sort_predicted(model, data_df, input_dir, model_options, criterion, keep_true,
                    batch_size=1, num_workers=0, gpu=False):
     from .data import return_dataset, get_transforms
@@ -424,13 +501,40 @@ def mode_level_to_tsvs(output_dir, results_df, metrics, fold, selection, mode, d
     if metrics is not None:
         metrics["%s_id" % mode] = cnn_index
         if isinstance(metrics, dict):
-            pd.DataFrame(metrics, index=[0]).to_csv(os.path.join(performance_dir, '%s_%s_level_metrics.tsv' % (dataset, mode)),
-                                                    index=False, sep='\t')
+            pd.DataFrame(metrics, index=[0]).to_csv(
+                os.path.join(performance_dir, '%s_%s_level_metrics.tsv' % (dataset, mode)),
+                index=False, sep='\t')
         elif isinstance(metrics, pd.DataFrame):
             metrics.to_csv(os.path.join(performance_dir, '%s_%s_level_metrics.tsv' % (dataset, mode)),
                            index=False, sep='\t')
         else:
             raise ValueError("Bad type for metrics: %s. Must be dict or DataFrame." % type(metrics).__name__)
+
+
+def bayesian_predicions_to_tsvs(output_dir, bayesian_predictions_list, fold, selection, mode, dataset='train',
+                                cnn_index=None):
+    """
+    Writes the outputs of the test function in tsv files.
+
+    Args:
+        output_dir: (str) path to the output directory.
+        results_df: (DataFrame) the individual results per patch.
+        metrics: (dict or DataFrame) the performances obtained on a series of metrics.
+        fold: (int) the fold for which the performances were obtained.
+        selection: (str) the metrics on which the model was selected (best_acc, best_loss)
+        mode: (str) input used by the network. Chosen from ['image', 'patch', 'roi', 'slice'].
+        dataset: (str) the dataset on which the evaluation was performed.
+        cnn_index: (int) provide the cnn_index only for a multi-cnn framework.
+    """
+
+    for i, bayesian_predictions_df in enumerate(bayesian_predictions_list):
+        performance_dir = os.path.join(output_dir, 'fold-%i' % fold, 'cnn_classification', 'bayesian_predictions', 'prediction-%i' % i,
+                                       selection, dataset)
+
+        os.makedirs(performance_dir, exist_ok=True)
+
+        bayesian_predictions_df.to_csv(os.path.join(performance_dir, '%s_%s_level_prediction.tsv' % (dataset, mode)), index=False,
+                          sep='\t')
 
 
 def concat_multi_cnn_results(output_dir, fold, selection, mode, dataset, num_cnn):
@@ -635,12 +739,14 @@ def get_criterion(option, classWights):
     else:
         raise ValueError("The option %s is unknown for criterion selection" % option)
 
+
 def get_classWeights(params, df):
     device = torch.device("cpu" if params.use_cpu else "cuda")
     nSamples = [len(df[df["diagnosis"].isin([i])]) for i in params.diagnoses]
     normedWeights = [1 - (x / sum(nSamples)) for x in nSamples]
     normedWeights = torch.FloatTensor(normedWeights).to(device)
     return normedWeights
+
 
 def binarize_label(y, classes, pos_label=1, neg_label=0):
     """Greatly inspired from scikit-learn"""
