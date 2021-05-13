@@ -10,7 +10,7 @@ module load pytorch/gpu/1.6.0
 EPOCHS=200
 BATCH=10
 LR=1e-4
-
+BAYESIAN=True
 for MS in '1.5T-3T' '1.5T' '3T'
 do
     for NETWORK in "ResNet18" "SEResNet18" "ResNet18Expanded" "SEResNet18Expanded" "Conv5_FC3"
@@ -22,8 +22,14 @@ do
                 echo -e "==========================================================================================================\n"
                 # Input arguments to clinicaaddl
                 CAPS_DIR="$HOME/MasterProject/DataAndExperiments/Data/CAPS"
+                if [ $BAYESIAN = True ]; then
+                NN_FOLDER="NNs_Bayesian"
+                else
+                NN_FOLDER="NNs"
+                fi
+                
                 TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments/Experiments-${MS}/labels/train"
-                OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments/Experiments-${MS}/NNs/${NETWORK}/"
+                OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
 
                 # Dataset Management
                 PREPROCESSING='linear'
@@ -80,6 +86,7 @@ do
                   --learning_rate $LR \
                   --weight_decay $WEIGHT_DECAY \
                   --patience $PATIENCE \
+                  --bayesian $BAYESIAN \
                   $OPTIONS
 
             done

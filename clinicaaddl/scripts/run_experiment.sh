@@ -23,7 +23,7 @@ module load cuda/10.2
 module load pytorch/gpu/1.6.0
 
 
-BATCH=10
+BATCH=7
 NUM_SPLITS=1
 SPLIT=0
 NPROC=2
@@ -40,4 +40,4 @@ fi
 
 # Run clinicaaddl
 srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py train \
-  $1 --resume $FROM_CHECKPOINT $OPTIONS 
+  $1 --resume $FROM_CHECKPOINT $OPTIONS
