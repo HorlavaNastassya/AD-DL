@@ -206,6 +206,12 @@ def read_json(options, json_path=None, test=False):
 
     if not hasattr(options, 'discarded_sliced'):
         options.discarded_slices = 20
+        
+    if not hasattr(options, 'bayesian'):
+        options.bayesian = False
+        
+    if not hasattr(options, 'loss'):
+        options.loss = 'default'
 
     if isinstance(options.preprocessing, str):
         if options.preprocessing in prep_compatibility_dict.keys():
