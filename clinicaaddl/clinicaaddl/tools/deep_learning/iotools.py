@@ -105,14 +105,13 @@ def check_and_create(d):
         os.makedirs(d, exist_ok=False)
         dir_split=os.path.split(d)
         name=dir_split[1]
-        print("Directory was succesfully created at \n"+d)
+#         print("Directory was succesfully created at \n"+d)
 #         print("Directory name:\n"+name)
     except OSError as error:
         dir_split=os.path.split(d)
         name=dir_split[1] + '_' + datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         d = os.path.join(dir_split[0],name)
-        print("Directory can not be created. This foder already exists, directory name was changed into \n"+d)
-#         print("Directory name:\n"+name)
+#         print("Directory can not be created. This foder already exists, directory name was changed into \n"+d)
         os.makedirs(d)
 
     return d

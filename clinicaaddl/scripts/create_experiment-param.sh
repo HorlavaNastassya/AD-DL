@@ -9,7 +9,7 @@ module load pytorch/gpu/1.6.0
 
 EPOCHS=200
 BATCH=10
-LR=1e-4
+LR=1e-3
 BAYESIAN=True
 for MS in '1.5T-3T' '1.5T' '3T'
 do
@@ -19,7 +19,7 @@ do
         do
             for AUGMENTATION in True False
             do
-                echo -e "==========================================================================================================\n"
+#                 echo -e "==========================================================================================================\n"
                 # Input arguments to clinicaaddl
                 CAPS_DIR="$HOME/MasterProject/DataAndExperiments/Data/CAPS"
                 if [ $BAYESIAN = True ]; then

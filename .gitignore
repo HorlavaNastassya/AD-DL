@@ -38,3 +38,6 @@ clinicaaddl/clinicaaddl/resources/masks/*.nii.gz
 
 #logs
 clinicaaddl/scripts/logs
+
+#degub file
+clinicaaddl/Debug.ipynb

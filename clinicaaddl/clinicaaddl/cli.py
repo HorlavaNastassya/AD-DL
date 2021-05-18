@@ -119,7 +119,9 @@ def prepare_train_func(args):
     
     if args.network_type not in ["autoencoder", "cnn", "multicnn"]:
         raise NotImplementedError('Framework %s not implemented in clinicaaddl' % args.network_type)
-    print("You can now run the experiment via executing the following command")
+#     print("You can now run the experiment via executing the following command")
+    with open("../scripts/submit_experiments.sh", "a") as f:
+        f.write("\nsbatch run_experiment.sh "+args.output_dir)
     print("sbatch run_experiment.sh "+args.output_dir)
 
 
