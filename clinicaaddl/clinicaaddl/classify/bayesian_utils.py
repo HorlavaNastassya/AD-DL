@@ -117,10 +117,6 @@ class BayesianFunctionality():
         if get_previous_loss:
             metrics_dict['total_loss'] = old_results_df["total_loss"][0]
 
-        # print("%s mode, old b.accuracy: %.4f, new b.accuracy: %.4f" % (selection, old_results_df["balanced_accuracy"][0], metrics_dict["balanced_accuracy"]))
-        # if metrics_dict["balanced_accuracy"] > old_results_df["balanced_accuracy"][0]:
-        # print("new way of calculating labels is better in balanced accuracy for %s in %s" % (selection, output_dir))
-
         prefix = prefix + "_from-mean" if from_mean else prefix
         mode_level_to_tsvs(output_dir, results_df, metrics_dict, fold, selection, mode,
                            dataset=prefix)

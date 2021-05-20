@@ -78,7 +78,7 @@ class Plots():
         ax.set_title("Model from: " + mode)
 
     @staticmethod
-    def loss_with_results(params, results, history, saved_file_path=None):
+    def barplots_with_loss(params, results, history, saved_file_path=None):
         readable_params = ['model', 'data_augmentation', 'batch_size', 'learning_rate', "loss", 'training MS']
         num_figures = len(results.keys())
         fig, axes = plt.subplots(2, num_figures, figsize=(int(12 * num_figures), 18))
@@ -100,5 +100,48 @@ class Plots():
             plt.savefig(saved_file_path)
         else:
             plt.show()
-
         plt.close()
+
+    @staticmethod
+    def barplots_loss(
+            predictions_path,
+            output_path,
+            MS_list, model_params, fold,
+            model_name,
+            **kwargs
+    ):
+        # **kwargs store the following: save_best=True, path_to_best=None,
+        import os
+        from pathlib import Path
+        from .data_utils import get_results
+        history = pd.read_csv(os.path.join(predictions_path, 'fold-%i' % fold, 'training.tsv'),
+                              sep='\t')
+        results=get_results(predictions_path, MS_list, fold)
+        folder_type = 'barplots_with_loss'
+        path = os.path.join(output_path, folder_type)
+        os.makedirs(path, exist_ok=True)
+        file_name = model_name + '.png'
+        Plots.barplots_with_loss(model_params, results, history, os.path.join(path, file_name))
+        if kwargs["save_best"]:
+            best_model_filename=os.path.join(kwargs["path_to_best"], "best_model_results.json")
+            if Path(best_model_filename).is_file():
+                with open(best_model_filename, "r") as f:
+                    reported_best_accuracies=json.load(f)
+            else:
+                reported_best_accuracies = {}
+                for ms_el in MS_list:
+                    reported_best_accuracies[ms_el] = {"max_value": 0}
+            for ms_el in MS_list:
+                for mode in results.keys():
+                    if results[mode]["test_" + ms_el]["balanced_accuracy"][0] > \
+                            reported_best_accuracies[ms_el]["max_value"]:
+                        reported_best_accuracies[ms_el]["max_value"] = \
+                            results[mode]["test_" + ms_el]["balanced_accuracy"][0]
+                        reported_best_accuracies[ms_el]["prediction_path"] = str(predictions_path)
+                        reported_best_accuracies[ms_el]["params"] = model_params
+                    reported_best_accuracies[ms_el]["model_name"] = model_name
+            with open(best_model_filename, "w") as f:
+                json.dump(reported_best_accuracies, f)
+
+
+
