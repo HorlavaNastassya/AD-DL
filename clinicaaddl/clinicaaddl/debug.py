@@ -1,7 +1,6 @@
 from classify.bayesian_utils import bayesian_predictions
 from visualize.plot import plot_generic
 import os
-from visualize.plot import  plot_generic
 
 if __name__ == "__main__":
 
@@ -9,19 +8,21 @@ if __name__ == "__main__":
     import pandas as pd
     import os
     import json
+    from clinicaaddl.visualize.plot import plot_generic
 
-    progress_list = []
     folders = []
-    MS_main_list = ['1.5T']
+    MS_main_list = ['1.5T', '3T', "1.5T-3T"]
+    MS_list_dict = {'1.5T':['1.5T', '3T'], "3T": ['3T', '1.5T'], "1.5T-3T": ["1.5T-3T"]}
+    home_folder='/u/horlavanasta/MasterProject/'
 
     isBayesian=True
     for MS in MS_main_list:
         print("____________________________________________________________________________________________")
-        model_types = ["Conv5_FC3"]
-        MS_list = ['1.5T', '3T'] if MS == '1.5T' else ['3T', '1.5T']
+        model_types = [ "ResNet18", "SEResNet18", "ResNet18Expanded", "SEResNet18Expanded", "Conv5_FC3" ]
+        MS_list = MS_list_dict[MS]
 
-        results_folder_general = '/home/nastya/Documents/MasterProject/results/Experiments/Experiments-' + MS
-        model_dir_general = os.path.join("/home/nastya/Documents/MasterProject/Experiments/Experiments-" + MS, "NNs_Bayesian" if isBayesian else "NNs")
+        results_folder_general =os.path.join(home_folder, 'Code/ClinicaTools/AD-DL/results/', "Experiments_Bayesian" if isBayesian else "Experiments", 'Experiments-' + MS)
+        model_dir_general = os.path.join(home_folder,"DataAndExperiments/Experiments/Experiments-" + MS, "NNs_Bayesian" if isBayesian else "NNs")
 
         for network in model_types:
             model_dir = os.path.join(model_dir_general, network)
