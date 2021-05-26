@@ -15,7 +15,6 @@ import errno
 def bayesian_predictions(
         predictions_path,
         prefix,
-        selection_metrics=None,
         verbose=0,
         function=None,
         **kwards
@@ -23,6 +22,7 @@ def bayesian_predictions(
     # prefix: e.g. test_1.5T
     # selection_metrics: best_loss/best accuracy etc
     import argparse
+    possible_selection_metrics = ["best_loss", "best_balanced_accuracy", "last_checkpoint"]
     logger = return_logger(verbose, "classify")
     predictions_path = abspath(predictions_path)
 
@@ -47,20 +47,22 @@ def bayesian_predictions(
     for fold_dir in currentDirectory.glob(currentPattern):
         fold = int(str(fold_dir).split("-")[-1])
         fold_path = join(predictions_path, fold_dir)
-        predictions_path = join(fold_path, 'cnn_classification', 'bayesian_predictions')
-        print("Model:%s" % predictions_path)
-        for selection_metric in selection_metrics:
-            if selection_metric == "last_checkpoint":
-                full_predictions_path = join(predictions_path, selection_metric, prefix)
-            else:
-                full_predictions_path = join(predictions_path, "best_%s" % selection_metric, prefix)
-            selection_prefix = selection_metric if selection_metric == "last_checkpoint" else 'best_%s' % selection_metric
+        selection_metrics = []
+        cnn_classification_dir = os.path.join(fold_path, 'cnn_classification')
+        for f in os.scandir(cnn_classification_dir):
+            if os.path.basename(os.path.normpath(f.path)) in possible_selection_metrics:
+                selection_metrics.append(os.path.basename(os.path.normpath(f.path)))
 
+        predictions_path = join(cnn_classification_dir,'bayesian_predictions')
+        print("Model:%s" % predictions_path)
+
+        for selection_metric in selection_metrics:
+            full_predictions_path = join(predictions_path, selection_metric, prefix)
             args = {"predictions_path": full_predictions_path,
                     "prefix": prefix,
                     "output_dir": currentDirectory,
                     "fold": fold,
-                    "selection": selection_prefix,
+                    "selection": selection_metric,
                     "mode": options.mode,
                     }
             if function == "inference":
