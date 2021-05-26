@@ -90,6 +90,8 @@ def barplots_with_loss(params, results, history, saved_file_path=None):
     axes[1][2].axis('off')
 
     plt.suptitle(str_suptitle)
+    plt.subplots_adjust(left=None, right=None, top=None, bottom=None, wspace=None, hspace=None)
+
     if saved_file_path is not None:
         plt.savefig(saved_file_path)
     else:
@@ -119,7 +121,7 @@ def plot_hist(axes, stat, uncertainty_metric, rows, cols, separate_by_labels):
         for j, test_MS in enumerate(stat[selection_metric].keys()):
             st = stat[selection_metric][test_MS]
             sns.histplot(data=st, x=st[uncertainty_metric], hue=st.true_label.values if separate_by_labels else None,
-                         ax=axes[j][i], stat="probability")
+                         ax=axes[j][i], stat="probability", bins=100)
             xlim_list["left_limit"].append(min(axes[j][i].get_xlim()))
             xlim_list["right_limit"].append(max(axes[j][i].get_xlim()))
 

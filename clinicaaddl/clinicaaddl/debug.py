@@ -34,7 +34,7 @@ if __name__ == "__main__":
             folders = [f for f in pathlib.Path(model_dir).glob(modelPatter)]
 
             for f in folders[:]:
-                results_dir=os.path.join(results_folder_general,network)
+                results_dir=os.path.join(results_folder_general, network)
                 # plot_generic(f, results_dir, MS, MS_list, "barplots_loss", **{"save_best":True, "path_to_best":results_dir})
                 plot_generic(f, results_dir, MS, MS_list, "uncertainty_distribution", **{"separate_by_labels":True, "uncertainty_metric":"total_variance", "include_results":True})
 

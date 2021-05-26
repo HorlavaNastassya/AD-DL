@@ -1,6 +1,7 @@
 # coding: utf8
 
 import argparse
+import os.path
 from distutils.util import strtobool
 
 from colorama import Fore
@@ -116,13 +117,13 @@ def prepare_train_func(args):
     args.output_dir = check_and_create(args.output_dir)
     commandline_to_json(args, logger=main_logger)
     write_requirements_version(args.output_dir)
-    
+
     if args.network_type not in ["autoencoder", "cnn", "multicnn"]:
         raise NotImplementedError('Framework %s not implemented in clinicaaddl' % args.network_type)
-#     print("You can now run the experiment via executing the following command")
+    #     print("You can now run the experiment via executing the following command")
     with open("../scripts/submit_experiments.sh", "a") as f:
-        f.write("\nsbatch run_experiment.sh "+args.output_dir)
-    print("sbatch run_experiment.sh "+args.output_dir)
+        f.write("\nsbatch run_experiment.sh " + args.output_dir)
+    print("sbatch run_experiment.sh " + args.output_dir)
 
 
 # Function to dispatch training to corresponding function
@@ -170,6 +171,22 @@ def classify_func(args):
         bayesian=args.bayesian,
         nbr_bayesian_iter=args.nbr_bayesian_iter if args.bayesian else None
     )
+
+
+def visualize_func(args):
+    from visualize.plot import plot_generic
+    import path
+
+    MS_list_dict = {'1.5T':['1.5T', '3T'], "3T": ['3T', '1.5T'], "1.5T-3T": ["1.5T-3T"]}
+
+    if args.MS:
+        MS = args.MS
+    else:
+        MS = [x.replace("Experiments-", "") for x in os.path.normpath((args.model_path)).split(os.path.sep) if
+              "Experiments-" in x][0]
+
+    args.MS_list=MS_list_dict[MS] if args.MS_list is None else args.MS_list
+    plot_generic(args, magnet_strength=MS)
 
 
 # Functions to dispatch command line options from tsvtool to corresponding
@@ -715,7 +732,6 @@ def parse_command_line():
         type=int, default=None, nargs='+')
     train_parser.set_defaults(func=train_func)
 
-
     # Prepare model dir for training
 
     prepare_train_parser = subparser.add_parser(
@@ -1048,7 +1064,8 @@ def parse_command_line():
         help='''Classify one image or a list of images with your previously
                  trained model.''')
 
-    classify_image_bayesian = classify_parser.add_argument_group("Bayesian Network", "Specifications for testing of Bayesian Network")
+    classify_image_bayesian = classify_parser.add_argument_group("Bayesian Network",
+                                                                 "Specifications for testing of Bayesian Network")
     classify_image_bayesian.add_argument(
         "--bayesian",
         help="Specify if classify bayesian network", type=str2bool, default=False)
@@ -1125,9 +1142,90 @@ def parse_command_line():
         "--baseline",
         help="Specify if baseline", type=str2bool, default=True)
 
-
-
     classify_parser.set_defaults(func=classify_func)
+
+    #########################
+    # VISUALIZE
+    #########################
+
+    visualize_parser = subparser.add_parser(
+        'visualize',
+        help='Visualize a list of images with your previously tested model.')
+
+    visualise_pos_group = visualize_parser.add_argument_group(
+        TRAIN_CATEGORIES["POSITIONAL"])
+
+    visualise_pos_group.add_argument(
+        'model_path',
+        help='''Path to the folder where the model is stored. Folder structure
+                        should be the same obtained during the training.''',
+        default=None)
+
+    visualise_pos_group.add_argument(
+        'output_path',
+        help='''Path to the folder where the resulting image will be saved''',
+        default=None)
+
+    visualise_pos_group.add_argument(
+        '--MS',
+        help='''Magnet strength of the scans on witch network was trained ''',
+        type=str,
+        default=None,
+    choices=["1.5T", "3T", "1.5T-3T"])
+
+    visualise_pos_group.add_argument(
+        '--MS_list',
+        type=str,
+        nargs="+",
+        help='''Magnet strength of the scans on witch network was tested and which you wants to include in your visualization''',
+        default=None,
+        choices=["1.5T", "3T", "1.5T-3T"])
+
+    visualize_subparser = visualize_parser.add_subparsers(
+        title='''Implemented visualization types ''',
+        description='''What type of input do you want to use?
+                        (uncertainty_distribution, barplots_loss, ...).''',
+        dest='plot_type',
+        help='''****** Plot types proposed by clinicaaddl ******''')
+
+    visualize_subparser.required = True
+
+    barplots_loss_parser = visualize_subparser.add_parser("barplots_loss",
+                                                          help="Plotting barplots of results with learning curves")
+    barplots_loss_parser.add_argument(
+        '--save_best',
+        help='Save info about a model with best params in a .json file',
+        type=str2bool,
+        default=False)
+
+    barplots_loss_parser.add_argument(
+        '--path_to_best',
+        help='Path to a file, where info about a model with best params would be saved',
+        type=str,
+        default=None)
+
+    uncertainty_dist_parser = visualize_subparser.add_parser("uncertainty_distribution",
+                                                             help="Plotting distribution of uncertainty metric (optionally: together with results")
+    uncertainty_dist_parser.add_argument(
+        '--uncertainty_metric',
+        help='Uncertainty metric',
+        type=str,
+        default="entropy",
+        choices=["total_variance", "entropy", "NLL"])
+
+    uncertainty_dist_parser.add_argument(
+        '--separate_by_labels',
+        help='Indicates whether to plot distribution separately for different labels',
+        type=str2bool,
+        default=True)
+
+    uncertainty_dist_parser.add_argument(
+        '--include_results',
+        help='Indicates whether to plot results with histograms as well',
+        type=str2bool,
+        default=True)
+
+    visualize_parser.set_defaults(func=visualize_func)
 
     tsv_parser = subparser.add_parser(
         'tsvtool',
@@ -1151,7 +1249,6 @@ def parse_command_line():
         help="dataset on which the restriction is performed.",
         choices=["AIBL", "OASIS", "ADNI"],
         type=str)
-
 
     tsv_restrict_subparser.add_argument(
         "merged_tsv",
@@ -1438,7 +1535,7 @@ def return_train_parent_parser(retrain=False):
             default='Conv5_FC3')
         train_pos_group.add_argument(
             '--bayesian',
-            help='Defines if Bayesian wrapper will be used for network',type=str2bool,
+            help='Defines if Bayesian wrapper will be used for network', type=str2bool,
             default=False)
 
     train_comput_group = train_parent_parser.add_argument_group(
