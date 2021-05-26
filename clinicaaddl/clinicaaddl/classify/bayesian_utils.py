@@ -13,8 +13,8 @@ import errno
 
 
 def bayesian_predictions(
-        predictions_path,
-        prefix,
+        model_path,
+        prefixes,
         verbose=0,
         function=None,
         **kwards
@@ -24,7 +24,7 @@ def bayesian_predictions(
     import argparse
     possible_selection_metrics = ["best_loss", "best_balanced_accuracy", "last_checkpoint"]
     logger = return_logger(verbose, "classify")
-    predictions_path = abspath(predictions_path)
+    predictions_path = abspath(model_path)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("model_path", type=str,
@@ -57,19 +57,20 @@ def bayesian_predictions(
         print("Model:%s" % predictions_path)
 
         for selection_metric in selection_metrics:
-            full_predictions_path = join(predictions_path, selection_metric, prefix)
-            args = {"predictions_path": full_predictions_path,
-                    "prefix": prefix,
-                    "output_dir": currentDirectory,
-                    "fold": fold,
-                    "selection": selection_metric,
-                    "mode": options.mode,
-                    }
-            if function == "inference":
-                args["from_mean"] = kwards["from_mean"]
+            for prefix in prefixes:
+                full_predictions_path = join(predictions_path, selection_metric, prefix)
+                args = {"model_path": full_predictions_path,
+                        "prefix": prefix,
+                        "output_path": currentDirectory,
+                        "fold": fold,
+                        "selection": selection_metric,
+                        "mode": options.mode,
+                        }
+                if function == "inference":
+                    args["from_mean"] = kwards["from_mean"]
 
-            getattr(BayesianFunctionality, function)(**args)
-        print("__________________________________________________________________")
+                getattr(BayesianFunctionality, function)(**args)
+        # print("__________________________________________________________________")
 
 
 class BayesianFunctionality():
@@ -124,9 +125,9 @@ class BayesianFunctionality():
                            dataset=prefix)
 
     @staticmethod
-    def stat(predictions_path,
-            prefix,
-            output_dir,
+    def stat(model_path,
+             output_path,
+             prefix,
             fold,
             selection,
             mode='image',
@@ -142,8 +143,8 @@ class BayesianFunctionality():
 
         results_df = pd.DataFrame(columns=columns)
 
-        performance_dir = os.path.join(output_dir, 'fold-%i' % fold, 'cnn_classification', selection)
-        predictions_dict = get_bayesian_prediction_from_model_generic(predictions_path)
+        performance_dir = os.path.join(output_path, 'fold-%i' % fold, 'cnn_classification', selection)
+        predictions_dict = get_bayesian_prediction_from_model_generic(model_path)
         stats_path = os.path.join(performance_dir, "bayesian_statistics")
         os.makedirs(stats_path, exist_ok=True)
         stats_filename=os.path.join(stats_path, '%s_%s_level_stats.tsv' % (prefix, mode))

@@ -189,6 +189,23 @@ def visualize_func(args):
     plot_generic(args, magnet_strength=MS)
 
 
+def bayesian_func(args):
+    from classify.bayesian_utils import bayesian_predictions
+
+
+    MS_list_dict = {'1.5T':['1.5T', '3T'], "3T": ['3T', '1.5T'], "1.5T-3T": ["1.5T-3T"]}
+
+    if args.MS:
+        MS = args.MS
+    else:
+        MS = [x.replace("Experiments-", "") for x in os.path.normpath((args.model_path)).split(os.path.sep) if
+              "Experiments-" in x][0]
+
+    MS_list=MS_list_dict[MS] if args.MS_list is None else args.MS_list
+    prefixes=["test_"+magnet_strength for magnet_strength in MS_list]
+    bayesian_predictions(model_path=args.model_path, prefixes=prefixes, function=args.function)
+
+
 # Functions to dispatch command line options from tsvtool to corresponding
 # function
 def tsv_restrict_func(args):
@@ -1226,6 +1243,47 @@ def parse_command_line():
         default=True)
 
     visualize_parser.set_defaults(func=visualize_func)
+
+    #########################
+    # BAYESIAN TOOLS
+    #########################
+
+    bayesian_parser = subparser.add_parser(
+        'bayesian',
+        help='Calculated stat from bayesian predictions with your previously tested model.')
+
+    bayesian_pos_group = bayesian_parser.add_argument_group(
+        TRAIN_CATEGORIES["POSITIONAL"])
+
+    bayesian_pos_group.add_argument(
+        'model_path',
+        help='''Path to the folder where the model is stored. Folder structure
+                            should be the same obtained during the training.''',
+        default=None)
+
+    bayesian_pos_group.add_argument(
+        '--MS',
+        help='''Magnet strength of the scans on witch network was trained ''',
+        type=str,
+        default=None,
+        choices=["1.5T", "3T", "1.5T-3T"])
+
+    bayesian_pos_group.add_argument(
+        '--MS_list',
+        type=str,
+        nargs="+",
+        help='''Magnet strength of the scans on witch network was tested and which you wants to include in your stat''',
+        default=None,
+        choices=["1.5T", "3T", "1.5T-3T"])
+
+    bayesian_pos_group.add_argument(
+        'function',
+        help='''Function for bayesian predictions''',
+        default="stat",
+    choices=["inference", "stat"])
+    bayesian_parser.set_defaults(func=bayesian_func)
+
+
 
     tsv_parser = subparser.add_parser(
         'tsvtool',
