@@ -8,7 +8,7 @@ if __name__ == "__main__":
     import pandas as pd
     import os
     import json
-    from clinicaaddl.visualize.plot import plot_generic
+    from visualize.plot import plot_generic
 
     folders = []
     # MS_main_list = ['1.5T', '3T', "1.5T-3T"]

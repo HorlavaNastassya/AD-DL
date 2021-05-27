@@ -46,5 +46,7 @@ def get_baesian_stat(predictions_dir, MS_list, fold, uncertainty_metric="entropy
                                                "bayesian_statistics", '%s_image_level_stats.tsv' % (prefix))
             test_diagnosis_df = pd.read_csv(test_diagnosis_path, sep='\t')
             test_diagnosis_df["class_variance"] = test_diagnosis_df["class_variance"].apply(lambda x: x[1:-1].split()).apply(lambda x: [float(i) for i in x])
-            results[selection_metric][prefix] = test_diagnosis_df[["participant_id", "session_id", "true_label", uncertainty_metric]]
+            results[selection_metric][prefix] = test_diagnosis_df
     return results
+
+

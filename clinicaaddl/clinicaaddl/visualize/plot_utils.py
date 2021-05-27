@@ -98,23 +98,22 @@ def barplots_with_loss(params, results, history, saved_file_path=None):
         plt.show()
     plt.close()
 
+def annotate(axes, cols, rows):
+    for ax, col in zip(axes[0], cols):
+        ax.annotate(col, xy=(0.5, 1), xytext=(0, 5),
+                    xycoords='axes fraction', textcoords='offset points',
+                    fontsize=20, ha='center', va='baseline')
 
-
+    for ax, row in zip(axes[:, 0], rows):
+        ax.annotate(row, xy=(0, 0.5), xytext=(-ax.yaxis.labelpad - 5, 0),
+                    xycoords=ax.yaxis.label, textcoords='offset points',
+                    fontsize=15, ha='right', va='center')
 
 def plot_hist(axes, stat, uncertainty_metric, rows, cols, separate_by_labels):
     import seaborn as sns
     import numpy as np
 
-    def annotate(axes, cols, rows):
-        for ax, col in zip(axes[0], cols):
-            ax.annotate(col, xy=(0.5, 1), xytext=(0, 5),
-                        xycoords='axes fraction', textcoords='offset points',
-                        fontsize=20, ha='center', va='baseline')
 
-        for ax, row in zip(axes[:, 0], rows):
-            ax.annotate(row, xy=(0, 0.5), xytext=(-ax.yaxis.labelpad - 5, 0),
-                        xycoords=ax.yaxis.label, textcoords='offset points',
-                        fontsize=15, ha='right', va='center')
     xlim_list={"left_limit":[], "right_limit":[]}
 
     for i, selection_metric in enumerate(stat.keys()):
@@ -145,13 +144,10 @@ def plot_uncertainty_dist(model_params, stat,  uncertainty_metric, separate_by_l
 
     matplotlib.rc('font', **font)
 
-    import seaborn as sns
-
     cols = [selection_metric.replace("_", " ") for selection_metric in stat.keys()]
     rows = [test_MS.replace("_", " ") for test_MS in stat[list((stat.keys()))[0]].keys()]
 
     str_suptitle = "Params: "
-
     for i, line in enumerate(readable_params):
         str_suptitle += line + ': ' + str(model_params[line]) + "; "
 
@@ -171,6 +167,53 @@ def plot_uncertainty_dist(model_params, stat,  uncertainty_metric, separate_by_l
     else:
         plt.show()
     plt.close()
+
+def plot_catplot(axes, stat, uncertainty_metric, rows, cols, inference_mode):
+    import seaborn as sns
+
+
+    for i, selection_metric in enumerate(stat.keys()):
+        for j, test_MS in enumerate(stat[selection_metric].keys()):
+            bayesian_stat_df = stat[selection_metric][test_MS]
+            prediction_column = "predicted_label_%s" % inference_mode
+            bayesian_stat_df["Prediction is correct"] = bayesian_stat_df.apply(lambda row: row["true_label"] == row[prediction_column], axis=1)
+
+            sns.swarmplot(data=bayesian_stat_df,  x="true_label", y=uncertainty_metric, hue="Prediction is correct", size=10,  ax=axes[j][i])
+
+    annotate(axes, cols, rows)
+
+def plot_uncertainty_catplot(model_params, stat,  uncertainty_metric, inference_mode="from_mode", saved_file_path=None, results=None):
+    import matplotlib
+
+    # font = {
+    #     # 'family': 'normal',
+    #         'weight': 'bold',
+    #         'size': 18}
+    #
+    # matplotlib.rc('font', **font)
+
+    cols = [selection_metric.replace("_", " ") for selection_metric in stat.keys()]
+    rows = [test_MS.replace("_", " ") for test_MS in stat[list((stat.keys()))[0]].keys()]
+
+    str_suptitle = "Params: "
+    for i, line in enumerate(readable_params):
+        str_suptitle += line + ': ' + str(model_params[line]) + "; "
+
+    num_rows=len(rows)+1 if results else len(rows)
+    fig, axes = plt.subplots(num_rows, len(cols), figsize=(int(12 * len(cols)), int(9 * num_rows)), sharey="row")
+    plot_catplot(axes, stat,uncertainty_metric, rows, cols, inference_mode)
+    if results:
+        for k, mode in enumerate(results.keys()):
+            plot_bar_plots(axes[-1][k], results[mode], mode)
+
+    plt.suptitle(str_suptitle, fontsize="large", fontweight="bold")
+    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.1, hspace=0.1)
+    if saved_file_path is not None:
+        plt.savefig(saved_file_path)
+    else:
+        plt.show()
+    plt.close()
+
 
 
 

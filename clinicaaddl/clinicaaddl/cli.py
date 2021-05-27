@@ -1201,7 +1201,7 @@ def parse_command_line():
     visualize_subparser = visualize_parser.add_subparsers(
         title='''Implemented visualization types ''',
         description='''What type of input do you want to use?
-                        (uncertainty_distribution, barplots_loss, ...).''',
+                        (uncertainty_distribution,uncertainty_catplot,  barplots_loss, ...).''',
         dest='plot_type',
         help='''****** Plot types proposed by clinicaaddl ******''')
 
@@ -1237,6 +1237,27 @@ def parse_command_line():
         default=True)
 
     uncertainty_dist_parser.add_argument(
+        '--include_results',
+        help='Indicates whether to plot results with histograms as well',
+        type=str2bool,
+        default=True)
+
+    uncertainty_catplop_parser = visualize_subparser.add_parser("uncertainty_catplot",
+                                                             help="Plotting distribution of uncertainty metric (optionally: together with results")
+    uncertainty_catplop_parser.add_argument(
+        '--uncertainty_metric',
+        help='Uncertainty metric',
+        type=str,
+        default="entropy",
+        choices=["total_variance", "entropy", "NLL"])
+
+    uncertainty_catplop_parser.add_argument(
+        '--inference_mode',
+        help='Indicates whether to plot distribution separately for different labels',
+        type=str,
+        default='from_mode')
+
+    uncertainty_catplop_parser.add_argument(
         '--include_results',
         help='Indicates whether to plot results with histograms as well',
         type=str2bool,
