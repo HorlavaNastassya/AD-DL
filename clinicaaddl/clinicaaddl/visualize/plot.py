@@ -35,10 +35,10 @@ class Plots():
                     reported_best_accuracies[ms_el] = {"max_value": 0}
             for ms_el in args.MS_list:
                 for mode in results.keys():
-                    if results[mode]["test_" + ms_el]["balanced_accuracy"][0] > \
+                    if results[mode]["test_" + ms_el]["f1-score"][0] > \
                             reported_best_accuracies[ms_el]["max_value"]:
                         reported_best_accuracies[ms_el]["max_value"] = \
-                            results[mode]["test_" + ms_el]["balanced_accuracy"][0]
+                            results[mode]["test_" + ms_el]["f1-score"][0]
                         reported_best_accuracies[ms_el]["prediction_path"] = args.model_path
                         reported_best_accuracies[ms_el]["params"] = model_params
                     reported_best_accuracies[ms_el]["model_name"] = model_name

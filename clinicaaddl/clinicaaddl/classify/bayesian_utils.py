@@ -54,7 +54,7 @@ def bayesian_predictions(
                 selection_metrics.append(os.path.basename(os.path.normpath(f.path)))
 
         predictions_path = join(cnn_classification_dir,'bayesian_predictions')
-        print("Model:%s" % predictions_path)
+#         print("Model:%s" % predictions_path)
 
         for selection_metric in selection_metrics:
             for prefix in prefixes:
@@ -133,9 +133,11 @@ class BayesianFunctionality():
             mode='image',
     ):
         import pandas as pd
+        
+        import scipy.stats as st
         import numpy as np
 
-        columns = ["participant_id", "session_id", "true_label",  "class_variance", "total_variance", "entropy", "NLL"]
+        columns = ["participant_id", "session_id", "true_label", "predicted_label_from_mean", "predicted_label_from_mode", "class_variance", "total_variance", "entropy", "NLL"]
         # Saving following metrics: class_variance: variance for each class(column) separately [12 value per object];
         # total_variance: sum of var over columns [1 value per object];
         # NLL=-log(highest probability of mean probabilities over T runs [1 value per object];
@@ -151,16 +153,22 @@ class BayesianFunctionality():
 
         for id in predictions_dict.keys():
             mean_predicted_class = np.mean(predictions_dict[id]["bayesian_predictions"], axis=0)
-            predicted_class = np.argmax(mean_predicted_class, axis=-1)
-            nll_row=-np.log(mean_predicted_class[predicted_class])
+            predicted_class_from_mean = np.argmax(mean_predicted_class, axis=-1)
+            
+            predicted_class_from_mode, _ = st.mode(np.argmax(predictions_dict[id]["bayesian_predictions"], axis=1), axis=0)
+            predicted_class_from_mode = predicted_class_from_mode[0]
+                
+            #Note: nll is taking into consideration prediction from mean, not from the mode
+            nll_row=-np.log(mean_predicted_class[predicted_class_from_mean])
             class_variance_row=np.var(predictions_dict[id]["bayesian_predictions"], axis=0)
             total_variance_row=np.sum(class_variance_row)
             entropy_row=-np.sum(mean_predicted_class*np.log2(mean_predicted_class+1E-14))
+            
+            
 
-            row = [[id, predictions_dict[id]["session_id"], predictions_dict[id]["true_label"], class_variance_row, total_variance_row, entropy_row, nll_row ]]
+            row = [[id, predictions_dict[id]["session_id"], predictions_dict[id]["true_label"],predicted_class_from_mean, predicted_class_from_mode, class_variance_row, total_variance_row, entropy_row, nll_row ]]
             row_df = pd.DataFrame(row, columns=columns)
             results_df = pd.concat([results_df, row_df])
-
             results_df.reset_index(inplace=True, drop=True)
 
         results_df.to_csv(stats_filename, index=False, sep='\t')
@@ -168,7 +176,8 @@ class BayesianFunctionality():
 
 def get_bayesian_prediction_from_model_generic(predictions_path):
     import pandas as pd
-    bayes_prediction_files = [f.path for f in os.scandir(predictions_path)]
+    modelPatter = "subject_model*"
+    bayes_prediction_files = [f for f in pathlib.Path(predictions_path).glob("test_*")]
     predictions_dict = {}
     for idx, prediction_file in enumerate(bayes_prediction_files):
         bayes_predictions_df = pd.read_csv(prediction_file, '\t')
