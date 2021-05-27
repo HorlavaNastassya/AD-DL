@@ -147,7 +147,7 @@ def plot_uncertainty_dist(model_params, stat,  uncertainty_metric, separate_by_l
         str_suptitle += line + ': ' + str(model_params[line]) + "; "
 
     num_rows=len(rows)+1 if results else len(rows)
-    fig, axes = plt.subplots(num_rows, len(cols), figsize=(int(12 * len(cols)), int(9 * num_rows)), sharey="row")
+    fig, axes = plt.subplots(num_rows, len(cols), figsize=(int(18 * len(cols)), int(12 * num_rows)), sharey="row")
 
     plot_hist(axes, stat,uncertainty_metric, rows, cols, separate_by_labels)
 
@@ -156,7 +156,7 @@ def plot_uncertainty_dist(model_params, stat,  uncertainty_metric, separate_by_l
             plot_bar_plots(axes[-1][k], results[mode], mode)
 
     plt.suptitle(str_suptitle)
-    plt.subplots_adjust(left=None, right=None, top=None, bottom=None, wspace=None, hspace=None)
+    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.05, hspace=0.05)
     if saved_file_path is not None:
         plt.savefig(saved_file_path)
     else:
