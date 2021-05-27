@@ -38,8 +38,8 @@ def plot_bar_plots(ax, results, mode):
         for rect in rects:
             height = rect.get_height()
             ax.text(rect.get_x() + rect.get_width() / 2., 1.02 * height,
-                    '%.3f' % (height),
-                    ha='center', va='bottom')
+                    '%.2f' % (height),
+                    ha='center', va='bottom', fontsize=20)
 
     def reshape_results(results):
         metrics = {}
@@ -55,8 +55,8 @@ def plot_bar_plots(ax, results, mode):
     N = len(results.keys())
 
     ind = np.arange(N)
-    width = 0.2
-    width_ratio = 0.9
+    width = 0.21
+    width_ratio = 1.0
     #     ax.set_prop_cycle('color', Pastel1_4.mpl_colors)
     ax.set_prop_cycle('color', cm.get_cmap('Paired').colors)
 
@@ -136,6 +136,15 @@ def plot_hist(axes, stat, uncertainty_metric, rows, cols, separate_by_labels):
 
 
 def plot_uncertainty_dist(model_params, stat,  uncertainty_metric, separate_by_labels=False, saved_file_path=None, results=None):
+    import matplotlib
+
+    font = {
+        # 'family': 'normal',
+            'weight': 'bold',
+            'size': 24}
+
+    matplotlib.rc('font', **font)
+
     import seaborn as sns
 
     cols = [selection_metric.replace("_", " ") for selection_metric in stat.keys()]
@@ -147,7 +156,7 @@ def plot_uncertainty_dist(model_params, stat,  uncertainty_metric, separate_by_l
         str_suptitle += line + ': ' + str(model_params[line]) + "; "
 
     num_rows=len(rows)+1 if results else len(rows)
-    fig, axes = plt.subplots(num_rows, len(cols), figsize=(int(18 * len(cols)), int(12 * num_rows)), sharey="row")
+    fig, axes = plt.subplots(num_rows, len(cols), figsize=(int(20 * len(cols)), int(16 * num_rows)), sharey="row")
 
     plot_hist(axes, stat,uncertainty_metric, rows, cols, separate_by_labels)
 
@@ -155,8 +164,8 @@ def plot_uncertainty_dist(model_params, stat,  uncertainty_metric, separate_by_l
         for k, mode in enumerate(results.keys()):
             plot_bar_plots(axes[-1][k], results[mode], mode)
 
-    plt.suptitle(str_suptitle)
-    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.05, hspace=0.05)
+    plt.suptitle(str_suptitle, fontsize="large", fontweight="bold")
+    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.1, hspace=0.1)
     if saved_file_path is not None:
         plt.savefig(saved_file_path)
     else:
