@@ -1,15 +1,15 @@
 #!/bin/bash
 module load anaconda/3/2020.02
-module load cuda/10.2
-module load pytorch/gpu/1.6.0
+module load cuda/11.2
+module load pytorch/gpu-cuda-11.2/1.8.1
 
 # Experiment training CNN
 
 # Importnant args
 
-EPOCHS=200
+EPOCHS=100
 BATCH=10
-LR=1e-3
+LR=1e-5
 BAYESIAN=True
 for MS in '1.5T-3T' '1.5T' '3T'
 do
@@ -28,8 +28,8 @@ do
                 NN_FOLDER="NNs"
                 fi
                 
-                TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments/Experiments-${MS}/labels/train"
-                OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
+                TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments_3-fold/Experiments-${MS}/labels/train"
+                OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
 
                 # Dataset Management
                 PREPROCESSING='linear'
@@ -62,6 +62,7 @@ do
 
 
                 TASK_NAME="${TASK// /_}"
+                SAMPLER="weighted"
 
 #                 echo $TASK_NAME
 
@@ -87,6 +88,7 @@ do
                   --weight_decay $WEIGHT_DECAY \
                   --patience $PATIENCE \
                   --bayesian $BAYESIAN \
+                  --sampler $SAMPLER \
                   $OPTIONS
 
             done

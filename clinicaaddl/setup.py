@@ -5,7 +5,7 @@ with open(join(dirname(__file__), 'clinicaaddl/VERSION'), 'rb') as f:
     version = f.read().decode('ascii').strip()
 
 this_directory = abspath(dirname(__file__))
-with open(join(this_directory, pardir, 'README.md'), encoding='utf-8') as f:
+with open(join(this_directory, pardir, 'README.md')) as f:
     long_description = f.read()
 
 setup(

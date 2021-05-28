@@ -1259,9 +1259,16 @@ def parse_command_line():
 
     uncertainty_catplop_parser.add_argument(
         '--include_results',
-        help='Indicates whether to plot results with histograms as well',
+        help='Indicates whether to plot results with catplot as well',
         type=str2bool,
         default=True)
+    
+    uncertainty_catplop_parser.add_argument(
+        '--catplot_type',
+        help='Indicates which type of catplot to plot: stripplot,violinplot, swarmplot ',
+        type=str,
+        default='stripplot', 
+    choices=["stripplot","violinplot" ])
 
     visualize_parser.set_defaults(func=visualize_func)
 

@@ -19,16 +19,18 @@ else
 fi
 echo "Resume training from checkpoint: $FROM_CHECKPOINT"
 module load anaconda/3/2020.02
-module load cuda/10.2   
-module load pytorch/gpu/1.6.0
+module load cuda/11.2
+module load pytorch/gpu-cuda-11.2/1.8.1
 
 
-BATCH=7
-NUM_SPLITS=1
-SPLIT=0
+BATCH=8
+# NUM_SPLITS=1
+# SPLIT=0
+NUM_SPLITS=3
 NPROC=2
 # Other options
-OPTIONS="--n_splits $NUM_SPLITS --split $SPLIT --nproc $NPROC --batch_size $BATCH"
+# OPTIONS="--n_splits $NUM_SPLITS --split $SPLIT --nproc $NPROC --batch_size $BATCH"
+OPTIONS="--n_splits $NUM_SPLITS --nproc $NPROC --batch_size $BATCH"
 
 
 # Computation ressources

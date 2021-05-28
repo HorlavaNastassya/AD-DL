@@ -92,14 +92,14 @@ class Plots():
         from .data_utils import get_baesian_stat, get_results
 
         from .plot_utils import plot_uncertainty_catplot
-        folder_type = '%s_uncertainty_catplot' % args.uncertainty_metric
+        folder_type = '%s_uncertainty_%s' % (args.uncertainty_metric, args.catplot_type)
         stat = get_baesian_stat(args.model_path, args.MS_list, fold, args.uncertainty_metric)
         path = os.path.join(args.output_path, folder_type)
         os.makedirs(path, exist_ok=True)
         file_name = model_name + '.png'
         results = get_results(args.model_path, args.MS_list, fold) if args.include_results else None
         plot_uncertainty_catplot(model_params, stat, args.uncertainty_metric, inference_mode=args.inference_mode,
-                              saved_file_path=os.path.join(path, file_name), results=results)
+                              saved_file_path=os.path.join(path, file_name), results=results, catplot_type=args.catplot_type)
 
 
 def plot_generic(

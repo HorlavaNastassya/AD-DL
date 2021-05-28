@@ -120,7 +120,7 @@ def plot_hist(axes, stat, uncertainty_metric, rows, cols, separate_by_labels):
         for j, test_MS in enumerate(stat[selection_metric].keys()):
             st = stat[selection_metric][test_MS]
             sns.histplot(data=st, x=st[uncertainty_metric], hue=st.true_label.values if separate_by_labels else None,
-                         ax=axes[j][i], stat="probability", bins=100)
+                         ax=axes[j][i], stat="probability", bins=10)
             xlim_list["left_limit"].append(min(axes[j][i].get_xlim()))
             xlim_list["right_limit"].append(max(axes[j][i].get_xlim()))
 
@@ -168,7 +168,7 @@ def plot_uncertainty_dist(model_params, stat,  uncertainty_metric, separate_by_l
         plt.show()
     plt.close()
 
-def plot_catplot(axes, stat, uncertainty_metric, rows, cols, inference_mode):
+def plot_catplot(axes, stat, uncertainty_metric, rows, cols, inference_mode, catplot_type):
     import seaborn as sns
 
 
@@ -177,12 +177,21 @@ def plot_catplot(axes, stat, uncertainty_metric, rows, cols, inference_mode):
             bayesian_stat_df = stat[selection_metric][test_MS]
             prediction_column = "predicted_label_%s" % inference_mode
             bayesian_stat_df["Prediction is correct"] = bayesian_stat_df.apply(lambda row: row["true_label"] == row[prediction_column], axis=1)
-
-            sns.swarmplot(data=bayesian_stat_df,  x="true_label", y=uncertainty_metric, hue="Prediction is correct", size=10,  ax=axes[j][i])
+            arguments={"data": bayesian_stat_df, "x":"true_label", "y": uncertainty_metric, "hue": "Prediction is correct", "palette":"Set2", "ax":axes[j][i], "hue_order":[True, False]}
+            
+            if catplot_type=="violinplot":
+                arguments["split"]=True
+                arguments["scale"]="count"
+                
+            if catplot_type=="stripplot":
+                arguments["dodge"]=True
+                arguments["size"]=4
+                arguments["linewidth"]=1
+            getattr(sns, catplot_type)(**arguments)
 
     annotate(axes, cols, rows)
 
-def plot_uncertainty_catplot(model_params, stat,  uncertainty_metric, inference_mode="from_mode", saved_file_path=None, results=None):
+def plot_uncertainty_catplot(model_params, stat,  uncertainty_metric, inference_mode="from_mode", saved_file_path=None, results=None, catplot_type="swarmplot"):
     import matplotlib
 
     # font = {
@@ -201,7 +210,7 @@ def plot_uncertainty_catplot(model_params, stat,  uncertainty_metric, inference_
 
     num_rows=len(rows)+1 if results else len(rows)
     fig, axes = plt.subplots(num_rows, len(cols), figsize=(int(12 * len(cols)), int(9 * num_rows)), sharey="row")
-    plot_catplot(axes, stat,uncertainty_metric, rows, cols, inference_mode)
+    plot_catplot(axes, stat,uncertainty_metric, rows, cols, inference_mode, catplot_type)
     if results:
         for k, mode in enumerate(results.keys()):
             plot_bar_plots(axes[-1][k], results[mode], mode)
