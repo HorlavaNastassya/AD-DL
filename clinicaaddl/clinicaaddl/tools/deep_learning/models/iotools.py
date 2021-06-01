@@ -26,7 +26,7 @@ def save_checkpoint(state, accuracy_is_best, loss_is_best, checkpoint_dir, filen
         shutil.copyfile(os.path.join(checkpoint_dir, filename), os.path.join(best_loss_path, 'model_best.pth.tar'))
 
 
-def load_model(model, checkpoint_dir, gpu, filename='model_best.pth.tar'):
+def load_model(model, checkpoint_dir, gpu, filename='model_best.pth.tar', return_best_metrics=False):
     """
     Load the weights written in checkpoint_dir in the model object.
 
@@ -46,8 +46,10 @@ def load_model(model, checkpoint_dir, gpu, filename='model_best.pth.tar'):
 
     if gpu:
         best_model = best_model.cuda()
-
-    return best_model, param_dict['epoch']
+    if return_best_metrics:
+        return best_model, param_dict['epoch'], param_dict['valid_loss'], param_dict['valid_acc']
+    else:
+        return best_model, param_dict['epoch']
 
 
 def load_optimizer(optimizer_path, model):

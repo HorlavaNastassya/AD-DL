@@ -66,6 +66,8 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
         with open(filename, 'w') as f:
             results_df.to_csv(f, index=False, sep='\t')
         options.beginning_epoch = 0
+        options.best_valid_accuracy = -1.0
+        options.best_valid_loss = np.inf
 
     else:
         if not os.path.exists(filename):
@@ -74,14 +76,26 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
         truncated_tsv.set_index(['epoch', 'iteration'], inplace=True)
         truncated_tsv.drop(options.beginning_epoch, level=0, inplace=True)
         truncated_tsv.to_csv(filename, index=True, sep='\t')
+        if os.path.exists(os.path,join(model_dir, 'best_balanced_accuracy', 'model_best.pth.tar')):
+            _, _,_, options.best_valid_accuracy = load_model(model, os.path,join(model_dir, 'best_balanced_accuracy'), options.gpu)
+        else:
+            options.best_valid_accuracy = -1.0
+        if os.path.exists(os.path,join(model_dir, 'best_loss', 'model_best.pth.tar')):
+            _, _,options.best_valid_loss, _ = load_model(model,  os.path,join(model_dir, 'best_loss'), options.gpu)
+        else:
+            options.best_valid_loss = np.inf
+
+            
+        
 
     # Create writers
     writer_train = SummaryWriter(os.path.join(log_dir, 'train'))
     writer_valid = SummaryWriter(os.path.join(log_dir, 'validation'))
 
     # Initialize variables
-    best_valid_accuracy = -1.0
-    best_valid_loss = np.inf
+    
+    best_valid_accuracy = options.best_valid_accuracy
+    best_valid_accuracy = options.best_valid_loss
     epoch = options.beginning_epoch
 
     model.train()  # set the model to training mode

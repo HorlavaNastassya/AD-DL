@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --gres=gpu:v100:1
 #SBATCH --constraint="gpu"
-#SBATCH --time=02:00:00
+#SBATCH --time=23:59:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=20
@@ -25,12 +25,12 @@ module load pytorch/gpu-cuda-11.2/1.8.1
 
 BATCH=8
 # NUM_SPLITS=1
-# SPLIT=0
+SPLIT=2
 NUM_SPLITS=3
 NPROC=2
 # Other options
-# OPTIONS="--n_splits $NUM_SPLITS --split $SPLIT --nproc $NPROC --batch_size $BATCH"
-OPTIONS="--n_splits $NUM_SPLITS --nproc $NPROC --batch_size $BATCH"
+OPTIONS="--n_splits $NUM_SPLITS --split $SPLIT --nproc $NPROC --batch_size $BATCH"
+# OPTIONS="--n_splits $NUM_SPLITS --nproc $NPROC --batch_size $BATCH"
 
 
 # Computation ressources

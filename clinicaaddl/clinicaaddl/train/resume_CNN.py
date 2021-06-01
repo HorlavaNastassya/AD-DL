@@ -24,72 +24,127 @@ from clinicaaddl.tools.deep_learning.cnn_utils import train
 #                     help='Uses gpu instead of cpu if cuda is available')
 # parser.add_argument("--num_workers", '-w', default=1, type=int,
 #                     help='the number of batch being loaded in parallel')
+    
+def train_single_cnn(params):
+    """
+    Trains a single CNN and writes:
+        - logs obtained with Tensorboard during training,
+        - best models obtained according to two metrics on the validation set (loss and balanced accuracy),
+        - for patch and roi modes, the initialization state is saved as it is identical across all folds,
+        - final performances at the end of the training.
 
+    If the training crashes it is possible to relaunch the training process from the checkpoint.pth.tar and
+    optimizer.pth.tar files which respectively contains the state of the model and the optimizer at the end
+    of the last epoch that was completed before the crash.
+    """
+    main_logger = return_logger(params.verbose, "main process")
+    train_logger = return_logger(params.verbose, "train")
+    eval_logger = return_logger(params.verbose, "final evaluation")
 
-def resume_single_CNN(options):
-    import os
+    # params.output_dir=check_and_clean(params.output_dir)
+    #
+    # commandline_to_json(params, logger=main_logger)
 
-    options = read_json(json_path=os.path.join(options.output_dir, 'commandline.json'))
-    if options.evaluation_steps % options.accumulation_steps != 0 and options.evaluation_steps != 1:
-        raise Exception('Evaluation steps %d must be a multiple of accumulation steps %d' %
-                        (options.evaluation_steps, options.accumulation_steps))
+    # write_requirements_version(params.output_dir)
+    params = translate_parameters(params)
+    train_transforms, all_transforms = get_transforms(params.mode,
+                                                      minmaxnormalization=params.minmaxnormalization,
+                                                      data_augmentation=params.data_augmentation, output_dir=params.output_dir)
 
-    if options.minmaxnormalization:
-        transformations = MinMaxNormalization()
+    if params.split is None:
+        if params.n_splits is None:
+            fold_iterator = range(1)
+        else:
+            fold_iterator = range(params.n_splits)
     else:
-        transformations = None
+        fold_iterator = params.split
 
-    total_time = time()
+    for fi in fold_iterator:
+        main_logger.info("Fold %i" % fi)
+        # Initialize the model
+        main_logger.info('Initialization of the model')
+        
+        
+        # Initialize the model
+        print('Initialization of the model')
+        model = init_model(params, initial_shape=None)
+        
+        # Define output directories
+        log_dir = os.path.join(
+            params.output_dir, 'fold-%i' % fi, 'tensorboard_logs')
+        fold_dir= os.path.join(
+            params.output_dir, 'fold-%i' % fi)
+        model_dir = os.path.join(fold_dir, 'models')
+        
+        
+        
+        training_df, valid_df = load_data(
+            params.tsv_path,
+            params.diagnoses,
+            fi,
+            n_splits=params.n_splits,
+            baseline=params.baseline,
+            logger=main_logger
+        )
 
-    # Get the data.
-    training_tsv, valid_tsv = load_data(options.diagnosis_path, options.diagnoses,
-                                        options.split, options.n_splits, options.baseline)
+        data_train = return_dataset(params.mode, params.input_dir, training_df, params.preprocessing,
+                                    train_transformations=train_transforms, all_transformations=all_transforms,
+                                    params=params)
+        data_valid = return_dataset(params.mode, params.input_dir, valid_df, params.preprocessing,
+                                    train_transformations=train_transforms, all_transformations=all_transforms,
+                                    params=params)
 
-    data_train = MRIDataset(options.input_dir, training_tsv, transform=transformations, preprocessing=options.preprocessing)
-    data_valid = MRIDataset(options.input_dir, valid_tsv, transform=transformations, preprocessing=options.preprocessing)
+        train_sampler = generate_sampler(data_train, params.sampler)
 
-    # Use argument load to distinguish training and testing
-    train_loader = DataLoader(data_train,
-                              batch_size=options.batch_size,
-                              shuffle=True,
-                              num_workers=options.num_workers,
-                              pin_memory=True
-                              )
+        train_loader = DataLoader(
+            data_train,
+            batch_size=params.batch_size,
+            sampler=train_sampler,
+            num_workers=params.num_workers,
+            pin_memory=True
+        )
 
-    valid_loader = DataLoader(data_valid,
-                              batch_size=options.batch_size,
-                              shuffle=False,
-                              num_workers=options.num_workers,
-                              pin_memory=True
-                              )
+        valid_loader = DataLoader(
+            data_valid,
+            batch_size=params.batch_size,
+            shuffle=False,
+            num_workers=params.num_workers,
+            pin_memory=True
+        )
 
-    # Initialize the model
-    print('Initialization of the model')
-    model = create_model(options, data_train.size)
-    model_dir = path.join(options.model_path, "best_model_dir", "CNN", "fold_" + str(options.split))
-    model, current_epoch = load_model(model, model_dir, options.gpu, 'checkpoint.pth.tar')
 
-    options.beginning_epoch = current_epoch + 1
+        # Define criterion and optimizer
 
-    # Define criterion and optimizer
-    criterion = torch.nn.CrossEntropyLoss()
-    optimizer_path = path.join(options.model_path, 'optimizer.pth.tar')
-    optimizer = load_optimizer(optimizer_path, model)
+        normedWeights=get_classWeights(params, training_df)
+        criterion = get_criterion(params.loss, normedWeights)
+#         optimizer = getattr(torch.optim, params.optimizer)(filter(lambda x: x.requires_grad, model.parameters()),
+#                                                            lr=params.learning_rate,
+#                                                            weight_decay=params.weight_decay)
 
-    # Define output directories
-    log_dir = path.join(options.output_dir, 'log_dir', 'fold_%i' % options.split, 'CNN')
-    model_dir = path.join(options.output_dir, 'best_model_dir', 'fold_%i' % options.split, 'CNN')
+        if os.path.exists(fold_dir):
+            model, params.beginning_epoch = load_model(model, model_dir, options.gpu, 'checkpoint.pth.tar')
+            optimizer_path = path.join(options.model_path, 'optimizer.pth.tar')
+            optimizer = load_optimizer(optimizer_path, model)
+            resume_flag=True
+        else:
+            model = init_model(params, initial_shape=None)
+            model = transfer_learning(model, fi, source_path=params.transfer_learning_path,
+                                      gpu=params.gpu, selection=params.transfer_learning_selection,
+                                      logger=main_logger)
+            optimizer = getattr(torch.optim, params.optimizer)(filter(lambda x: x.requires_grad, model.parameters()),
+                                                           lr=params.learning_rate,
+                                                           weight_decay=params.weight_decay)
+            resume_flag=False
 
-    print('Resuming the training task')
-    train(model, train_loader, valid_loader, criterion, optimizer, True, log_dir, model_dir, options)
+        main_logger.debug('Beginning the training task')
+        #toDO: resume as argument from command line
+        train(model, train_loader, valid_loader, criterion,
+              optimizer, resume_flag, log_dir, model_dir, params, train_logger)
 
-    options.model_path = options.output_dir
-    test_single_cnn(train_loader, "train", options.split, criterion, options)
-    test_single_cnn(valid_loader, "validation", options.split, criterion, options)
-
-    total_time = time() - total_time
-    print("Total time of computation: %d s" % total_time)
-
+        test_single_cnn(model, params.output_dir, train_loader, "train",
+                        fi, criterion, params.mode, eval_logger, params.selection_threshold, gpu=params.gpu)
+        test_single_cnn(model, params.output_dir, valid_loader, "validation",
+                        fi, criterion, params.mode, eval_logger, params.selection_threshold, gpu=params.gpu)
 
 if __name__ == "__main__":
     commandline = parser.parse_known_args()
