@@ -128,7 +128,7 @@ def prepare_train_func(args):
 
 # Function to dispatch training to corresponding function
 def train_func(args):
-    from train import train_autoencoder, train_multi_cnn, train_single_cnn, resume_single_CNN
+    from train import train_autoencoder, train_multi_cnn, train_single_cnn
     from tools.deep_learning.iotools import read_json
     from tools.deep_learning.iotools import commandline_to_json
 
