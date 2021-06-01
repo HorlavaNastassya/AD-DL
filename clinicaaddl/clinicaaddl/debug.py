@@ -1,6 +1,7 @@
 from classify.bayesian_utils import bayesian_predictions
 from visualize.plot import plot_generic
 import os
+from cli import str2bool
 def get_args(model_path, MS_list, data_types):
     import argparse
 
@@ -11,6 +12,7 @@ def get_args(model_path, MS_list, data_types):
     parser.add_argument("--data_types", nargs='+', default=data_types)
     parser.add_argument("--MS_list", nargs='+', default=MS_list)
     parser.add_argument("--metrics",default=None)
+    parser.add_argument("--average_fold", type=str2bool, default=True)
 
 
 
@@ -34,7 +36,7 @@ if __name__ == "__main__":
     MS_list_dict = {'1.5T':['1.5T', '3T'], "3T": ['3T', '1.5T'], "1.5T-3T": ["1.5T-3T"]}
     # home_folder='/u/horlavanasta/MasterProject/'
     home_folder='/home/nastya/Documents/MasterProject/'
-    data_types=["history"]
+    data_types=["results"]
     isBayesian=True
 
     for MS in MS_main_list:
@@ -53,6 +55,7 @@ if __name__ == "__main__":
 
             for f in folders[:]:
                 args=get_args(f, MS_list, data_types)
-
+                args.get_test_from_bayesian=True
+                args.ba_inference_mode="mode"
                 data=get_data_generic(args)
 
