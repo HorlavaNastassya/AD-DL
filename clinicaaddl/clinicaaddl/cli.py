@@ -141,10 +141,7 @@ def train_func(args):
         args.transfer_learning_selection = "best_loss"
         train_autoencoder(args)
     elif args.network_type == "cnn":
-        if not args.resume:
-            train_single_cnn(args)
-        else:
-            resume_single_CNN(args)
+        train_single_cnn(args)
     elif args.network_type == "multicnn":
         train_multi_cnn(args)
     else:

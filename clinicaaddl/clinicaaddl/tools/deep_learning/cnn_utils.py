@@ -43,6 +43,7 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
     """
     from tensorboardX import SummaryWriter
     from time import time
+    from .models.iotools import load_model
 
     if logger is None:
         logger = logging
@@ -70,23 +71,20 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
         options.best_valid_loss = np.inf
 
     else:
-        if not os.path.exists(filename):
-            raise ValueError('The training.tsv file of the resumed experiment does not exist.')
-        truncated_tsv = pd.read_csv(filename, sep='\t')
-        truncated_tsv.set_index(['epoch', 'iteration'], inplace=True)
-        truncated_tsv.drop(options.beginning_epoch, level=0, inplace=True)
-        truncated_tsv.to_csv(filename, index=True, sep='\t')
-        if os.path.exists(os.path,join(model_dir, 'best_balanced_accuracy', 'model_best.pth.tar')):
-            _, _,_, options.best_valid_accuracy = load_model(model, os.path,join(model_dir, 'best_balanced_accuracy'), options.gpu)
+        # if not os.path.exists(filename):
+        #     raise ValueError('The training.tsv file of the resumed experiment does not exist.')
+        # truncated_tsv = pd.read_csv(filename, sep='\t')
+        # truncated_tsv.set_index(['epoch', 'iteration'], inplace=True)
+        # truncated_tsv.drop(options.beginning_epoch, level=0, inplace=True)
+        # truncated_tsv.to_csv(filename, index=True, sep='\t')
+        if os.path.exists(os.path.join(model_dir, 'best_balanced_accuracy', 'model_best.pth.tar')):
+            _, _,_, options.best_valid_accuracy = load_model(model, os.path.join(model_dir, 'best_balanced_accuracy'), options.gpu, return_best_metrics=True)
         else:
             options.best_valid_accuracy = -1.0
-        if os.path.exists(os.path,join(model_dir, 'best_loss', 'model_best.pth.tar')):
-            _, _,options.best_valid_loss, _ = load_model(model,  os.path,join(model_dir, 'best_loss'), options.gpu)
+        if os.path.exists(os.path.join(model_dir, 'best_loss', 'model_best.pth.tar')):
+            _, _,options.best_valid_loss, _ = load_model(model,  os.path.join(model_dir, 'best_loss'), options.gpu, return_best_metrics=True)
         else:
             options.best_valid_loss = np.inf
-
-            
-        
 
     # Create writers
     writer_train = SummaryWriter(os.path.join(log_dir, 'train'))
@@ -95,7 +93,7 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
     # Initialize variables
     
     best_valid_accuracy = options.best_valid_accuracy
-    best_valid_accuracy = options.best_valid_loss
+    best_valid_loss = options.best_valid_loss
     epoch = options.beginning_epoch
 
     model.train()  # set the model to training mode

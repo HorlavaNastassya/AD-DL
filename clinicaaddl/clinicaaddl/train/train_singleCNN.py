@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 import sys, os
 sys.path.insert(0, os.path.abspath('./'))
 
-from tools.deep_learning.models import transfer_learning, init_model, load_model
+from tools.deep_learning.models import transfer_learning, init_model, load_model, load_optimizer
 from tools.deep_learning.data import (get_transforms,
                                         load_data,
                                         return_dataset,
@@ -42,7 +42,8 @@ def train_single_cnn(params):
     params = translate_parameters(params)
     train_transforms, all_transforms = get_transforms(params.mode,
                                                       minmaxnormalization=params.minmaxnormalization,
-                                                      data_augmentation=params.data_augmentation, output_dir=params.output_dir)
+                                                      data_augmentation=params.data_augmentation,
+                                                      output_dir=params.output_dir)
 
     if params.split is None:
         if params.n_splits is None:
@@ -56,10 +57,17 @@ def train_single_cnn(params):
         main_logger.info("Fold %i" % fi)
         # Initialize the model
         main_logger.info('Initialization of the model')
+
+        # Initialize the model
+        print('Initialization of the model')
         model = init_model(params, initial_shape=None)
-        model = transfer_learning(model, fi, source_path=params.transfer_learning_path,
-                                  gpu=params.gpu, selection=params.transfer_learning_selection,
-                                  logger=main_logger)
+
+        # Define output directories
+        log_dir = os.path.join(
+            params.output_dir, 'fold-%i' % fi, 'tensorboard_logs')
+        fold_dir = os.path.join(
+            params.output_dir, 'fold-%i' % fi)
+        model_dir = os.path.join(fold_dir, 'models')
 
         training_df, valid_df = load_data(
             params.tsv_path,
@@ -95,31 +103,41 @@ def train_single_cnn(params):
             pin_memory=True
         )
 
-
-
         # Define criterion and optimizer
 
-        normedWeights=get_classWeights(params, training_df)
+        normedWeights = get_classWeights(params, training_df)
         criterion = get_criterion(params.loss, normedWeights)
-        optimizer = getattr(torch.optim, params.optimizer)(filter(lambda x: x.requires_grad, model.parameters()),
-                                                           lr=params.learning_rate,
-                                                           weight_decay=params.weight_decay)
+        #         optimizer = getattr(torch.optim, params.optimizer)(filter(lambda x: x.requires_grad, model.parameters()),
+        #                                                            lr=params.learning_rate,
+        #                                                            weight_decay=params.weight_decay)
 
-        # Define output directories
-        log_dir = os.path.join(
-            params.output_dir, 'fold-%i' % fi, 'tensorboard_logs')
-        model_dir = os.path.join(
-            params.output_dir, 'fold-%i' % fi, 'models')
+        if params.resume and os.path.exists(fold_dir):
+            model, beginning_epoch = load_model(model, model_dir, params.gpu, 'checkpoint.pth.tar')
+            optimizer_path = os.path.join(model_dir, 'optimizer.pth.tar')
+            optimizer, optimizer_epoch = load_optimizer(optimizer_path, model, params.gpu)
+
+            if beginning_epoch != optimizer_epoch:
+                print('!!! Last model epoch and last optimizer_epoch does not match!!!')
+            params.beginning_epoch = beginning_epoch + 1
+
+        if not params.resume:
+            model = transfer_learning(model, fi, source_path=params.transfer_learning_path,
+                                      gpu=params.gpu, selection=params.transfer_learning_selection,
+                                      logger=main_logger)
+            optimizer = getattr(torch.optim, params.optimizer)(filter(lambda x: x.requires_grad, model.parameters()),
+                                                               lr=params.learning_rate,
+                                                               weight_decay=params.weight_decay)
 
         main_logger.debug('Beginning the training task')
-        #toDO: resume as argument from command line
-        train(model, train_loader, valid_loader, criterion,
-              optimizer, False, log_dir, model_dir, params, train_logger)
+        # toDO: resume as argument from command line
+        if params.beginning_epoch<params.epochs:
+            train(model, train_loader, valid_loader, criterion,
+                  optimizer, params.resume, log_dir, model_dir, params, train_logger)
 
-        test_single_cnn(model, params.output_dir, train_loader, "train",
-                        fi, criterion, params.mode, eval_logger, params.selection_threshold, gpu=params.gpu)
-        test_single_cnn(model, params.output_dir, valid_loader, "validation",
-                        fi, criterion, params.mode, eval_logger, params.selection_threshold, gpu=params.gpu)
+            test_single_cnn(model, params.output_dir, train_loader, "train",
+                            fi, criterion, params.mode, eval_logger, params.selection_threshold, gpu=params.gpu)
+            test_single_cnn(model, params.output_dir, valid_loader, "validation",
+                            fi, criterion, params.mode, eval_logger, params.selection_threshold, gpu=params.gpu)
 
 
 def test_single_cnn(model, output_dir, data_loader, subset_name, split, criterion, mode, logger, selection_threshold,

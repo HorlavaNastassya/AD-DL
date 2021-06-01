@@ -52,7 +52,7 @@ def load_model(model, checkpoint_dir, gpu, filename='model_best.pth.tar', return
         return best_model, param_dict['epoch']
 
 
-def load_optimizer(optimizer_path, model):
+def load_optimizer(optimizer_path, model, gpu=True):
     """
     Creates and load the state of an optimizer.
 
@@ -66,7 +66,11 @@ def load_optimizer(optimizer_path, model):
     if not path.exists(optimizer_path):
         raise ValueError('The optimizer was not found at path %s' % optimizer_path)
     print('Loading optimizer')
-    optimizer_dict = torch.load(optimizer_path)
+    if gpu:
+        optimizer_dict = torch.load(optimizer_path)
+    else:
+        optimizer_dict = torch.load(optimizer_path, map_location=torch.device('cpu'))
     name = optimizer_dict["name"]
     optimizer = eval("torch.optim." + name)(filter(lambda x: x.requires_grad, model.parameters()))
     optimizer.load_state_dict(optimizer_dict["optimizer"])
+    return optimizer, optimizer_dict["epoch"]
