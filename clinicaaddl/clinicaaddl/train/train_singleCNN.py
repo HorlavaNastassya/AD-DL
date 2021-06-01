@@ -127,6 +127,7 @@ def train_single_cnn(params):
             optimizer = getattr(torch.optim, params.optimizer)(filter(lambda x: x.requires_grad, model.parameters()),
                                                                lr=params.learning_rate,
                                                                weight_decay=params.weight_decay)
+            params.beginning_epoch=0
 
         main_logger.debug('Beginning the training task')
         # toDO: resume as argument from command line

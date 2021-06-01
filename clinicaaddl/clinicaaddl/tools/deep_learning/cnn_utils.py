@@ -66,7 +66,7 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
         results_df = pd.DataFrame(columns=columns)
         with open(filename, 'w') as f:
             results_df.to_csv(f, index=False, sep='\t')
-        options.beginning_epoch = 0
+#         options.beginning_epoch = 0
         options.best_valid_accuracy = -1.0
         options.best_valid_loss = np.inf
 
