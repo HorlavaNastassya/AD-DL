@@ -25,7 +25,7 @@ from clinicaaddl.tools.deep_learning.cnn_utils import train
 # parser.add_argument("--num_workers", '-w', default=1, type=int,
 #                     help='the number of batch being loaded in parallel')
     
-def train_single_cnn(params):
+def resume_single_CNN(params):
     """
     Trains a single CNN and writes:
         - logs obtained with Tensorboard during training,
