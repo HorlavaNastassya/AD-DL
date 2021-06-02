@@ -44,7 +44,6 @@ def get_results(args, average_fold=True):
             for mode in modes:
                 if "test" in mode and args.get_test_from_bayesian:
 
-                    # toDo: read from bayes stat
                     values_df = stat_dict[fold][selection_metric].groupby("mode")
                     values_df = values_df.get_group(mode)
                     prediction_column = "predicted_label_from_%s" % args.ba_inference_mode
@@ -67,9 +66,11 @@ def get_results(args, average_fold=True):
     resulting_metrics_dict = {}
     if average_fold:
         for key in results_dict.keys():
-            res_df=results_dict[key].drop(
+            res_df = results_dict[key].drop(
                 ["total_loss", "image_id"], axis=1)
             resulting_metrics_dict[key] = res_df.groupby(["mode"], as_index=False).agg(np.mean)
+        resulting_metrics_dict = {"folds_average": resulting_metrics_dict}
+
     else:
         for key in results_dict.keys():
             res_df = results_dict[key].drop(["total_loss", "image_id"], axis=1)
@@ -90,7 +91,6 @@ def get_uncertainty_distribution(args, average_fold=True):
 
     currentDirectory = pathlib.Path(args.model_path)
     currentPattern = "fold-*"
-    # stat_df = pd.DataFrame( columns = ["fold", "selection_metric", "prefix",  "participant_id", "session_id", "true_label", "predicted_label_from_mean", "predicted_label_from_mode", "class_variance", "total_variance", "entropy", "NLL"])
     stat_dict = {}
     for fold_dir in currentDirectory.glob(currentPattern):
         fold = int(str(fold_dir).split("-")[-1])
@@ -122,6 +122,7 @@ def get_uncertainty_distribution(args, average_fold=True):
             stat_df = stat_dict[key].drop(
                 ["true_label", "predicted_label_from_mean", "predicted_label_from_mode"], axis=1)
             resulting_stat_dict[key] = stat_df.groupby(["mode", "participant_id"], as_index=False).agg(np.mean)
+        resulting_stat_dict = {"folds_average": resulting_stat_dict}
     else:
         for key in stat_dict.keys():
             metric_dict = dict(list(stat_dict[key].groupby("fold")))
@@ -150,14 +151,32 @@ def get_history(args, average_fold=True):
     if average_fold:
         history_df = history_df[
             ["epoch", "balanced_accuracy_train", "loss_train", "balanced_accuracy_valid", "loss_valid"]]
-        history_df = history_df.groupby("epoch").agg(np.mean)
+        history_df = {"folds_average": history_df.groupby("epoch", as_index=False).agg(np.mean)}
     else:
         history_df = dict(list(history_df.groupby("fold")))
     return history_df
 
+def reshape_dictionary(dict_sample):
+    res = dict()
+    for key, val in dict_sample.items():
+        for key_in, val_in in val.items():
+            if key_in not in res:
+                temp = dict()
+            else:
+                temp = res[key_in]
+            temp[key] = val_in
+            res[key_in] = temp
+    return res
 
-def get_data_generic(args):
+
+
+def get_data_generic(args, reshape_dict=True):
     data = {}
     for data_type in args.data_types:
+
         data[data_type] = eval("get_%s" % data_type)(args, args.average_fold)
+    #data is now in format {data_type: {fold_0:, ...fold_n etc}}
+    if reshape_dict:
+        # reshape data to format  {fold_0: {data_type_1:, ...data_type_i etc}}
+        data = reshape_dictionary(data)
     return data

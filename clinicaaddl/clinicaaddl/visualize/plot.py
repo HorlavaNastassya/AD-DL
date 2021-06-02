@@ -1,3 +1,6 @@
+import matplotlib.pyplot as plt
+
+
 class Plots():
     def __init__(self):
         self.description = "plots functionality"
@@ -82,72 +85,121 @@ class Plots():
                                  catplot_type=args.catplot_type)
 
 
-def plot_combined_plots(args, model_params, model_name, saved_file_path, data=None, ):
-    import os
+def get_rows_and_cols(data):
+    import numpy as np
+    rows_matrix = {}
+    cols_matrix = {}
+    for data_type in data.keys():
+        cols_matrix[data_type] = [selection_metric.replace("_", " ") for selection_metric in data[data_type].keys()]
+        if data_type == "history":
+            cols_matrix[data_type] = ["loss", "balanced_accuracy"]
+        else:
+            cols_matrix[data_type] = [selection_metric.replace("_", " ") for selection_metric in data[data_type].keys()]
+
+        if data_type == "uncertainty_distribution":
+            rows_matrix[data_type] = [test_MS.replace("_", " ") for test_MS in
+                                      list(data[data_type].groupby("mode", replace_index=False).groups.keys())]
+        else:
+            rows_matrix[data_type] = [None]
+
+    num_rows = sum([len(rows_matrix[row]) for row in rows_matrix.keys()])
+    num_cols = max([len(cols_matrix[col]) for col in cols_matrix.keys()])
+    return rows_matrix, cols_matrix, num_rows, num_cols
 
 
-def create_data_dict(plot_types):
-    data={}
-    for key in plot_types.keys():
-        data[key]={}
-    return data
+def plot_uncertainty_distribution(args, data, fig, row, figshape):
+    pass
+
+
+def plot_history(args, data, fig, row, figshape):
+    from .plot_utils import plot_history_ax
+
+    for col, history_mode in enumerate(args.history_modes):
+        ax = plt.subplot2grid(shape=figshape, loc=(row, col), fig=fig)
+        plot_history_ax(ax, data, mode=history_mode)
+    return row + 1
+
+
+def plot_results(args, data, fig, row, figshape):
+    from .plot_utils import plot_results_ax
+
+    for col, selection_mode in enumerate(list(data.keys())):
+        ax = plt.subplot2grid(shape=figshape, loc=(row, col), fig=fig)
+        plot_results_ax(ax, data[selection_mode], args.result_metrics)
+        ax.set_title(selection_mode)
+    return row + 1
+
+
+
+def plot_combined_plots(args, model_params, saved_file_path, data=None):
+    import matplotlib.pyplot as plt
+
+    readable_params = ['model', 'data_augmentation', 'batch_size', 'learning_rate', "loss", 'training MS']
+
+    rows_matrix, cols_matrix, num_rows, num_cols = get_rows_and_cols(data)
+    fig = plt.figure(figsize=((int(8 * num_cols), int(6 * num_rows))))
+
+    row = 0
+    for data_key in data.keys():
+        row = eval("plot_%s" % (data_key))(args, data=data[data_key], fig=fig, figshape=(num_rows, num_cols), row=row)
+
+
+    str_suptitle = "\n Params: "
+    for i, line in enumerate(readable_params):
+        str_suptitle += line + ': ' + str(model_params[line]) + "; "
+    str_suptitle +="\n"
+
+    plt.suptitle(str_suptitle)
+
+    # plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.1, hspace=0.1)
+    if saved_file_path is not None:
+        plt.savefig(saved_file_path)
+    else:
+        plt.show()
+
+    plt.close()
 
 
 def plot_generic(
         args,
-        magnet_strength,
+        training_MS,
 ):
     import pathlib
     import os
     import json
     import pandas as pd
-    from .data_utils import get_baesian_stat, get_results
+    from .data_utils import get_data_generic
 
     currentDirectory = pathlib.Path(args.model_path)
-    currentPattern = "fold-*"
     path_params = os.path.join(currentDirectory, "commandline_train.json")
 
     with open(path_params, "r") as f:
         params = json.load(f)
 
-    params['training MS'] = magnet_strength
+    params['training MS'] = training_MS
     model_name = os.path.basename(os.path.normpath(currentDirectory))
 
+    folder_name = ''
+    for data_type in sorted(args.data_types):
+        if data_type=="uncertainty_distribution":
+            folder_name += '%s_uncertainty' % (args.uncertainty_metric)
+        else:
+            folder_name += data_type
 
+    data = get_data_generic(args)
 
-    folder_name = '-'.join(sorted(args.plot_types))
-    if len(list(filter(lambda x: "uncertainty" in x, args.plot_types))) > 0:
-        folder_name += '%s_uncertainty' % (args.uncertainty_metric)
+    for fold_key in data.keys():
 
-    for fold_dir in currentDirectory.glob(currentPattern):
-
-        fold = int(str(fold_dir).split("-")[-1])
-        fold_name = 'fold-%i' % fold
-
-        for plot_type in args.plot_types.keys():
-
-            data[plot_type][fold_name] = pd.read_csv(os.path.join(args.model_path, fold_name, 'training.tsv'),
-                                                  sep='\t')
-            stat_list[fold_name] = get_baesian_stat(args.model_path, args.MS_list, fold, args.uncertainty_metric)
-
-        results_list[fold_name] = get_results(args.model_path, args.MS_list, fold, stat_list)
-
-
-
-        # plot results depending on
         if not args.average_fold:
-            folder_fold_name = os.path.join("separate_folds", fold_name)
-            path = os.path.join(args.output_path, folder_fold_name, folder_name)
-            os.makedirs(path, exist_ok=True)
+            folder_fold_name = os.path.join("separate_folds", fold_key)
+        else:
+            folder_fold_name = fold_key
 
-            plot_combined_plots(args, model_params=params, model_name=model_name, data=data,
-                                saved_file_path=os.path.join(path, model_name + '.png'))
+        if args.output_path:
+            saved_file_path = os.path.join(args.output_path, folder_fold_name, folder_name)
+            os.makedirs(saved_file_path, exist_ok=True)
+            saved_file_path=os.path.join(saved_file_path, model_name + '.png')
+        else:
+            saved_file_path=None
 
-    if args.average_fold:
-        pass
-        # get_average
-
-
-
-
-
+        plot_combined_plots(args, model_params=params, data=data[fold_key], saved_file_path=saved_file_path)

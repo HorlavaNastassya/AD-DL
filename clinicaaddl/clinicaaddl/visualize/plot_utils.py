@@ -5,10 +5,9 @@ import json
 import numpy as np
 from matplotlib import cm
 
-readable_params = ['model', 'data_augmentation', 'batch_size', 'learning_rate', "loss", 'training MS']
 
-
-def plot_history(ax, history, mode):
+def plot_history_ax(ax, history, mode):
+    import seaborn as sns
     def find_best(arr, ismin=True):
         arr = np.array(arr)
         if ismin:
@@ -17,21 +16,53 @@ def plot_history(ax, history, mode):
             best_loss_idx_train = np.where(arr == np.amax(arr))[0][0]
         return best_loss_idx_train, arr[best_loss_idx_train]
 
-    ax.plot(history["epoch"], history[mode + "_train"], 'black', lw=1, label='train ' + mode)
-    ax.plot(history["epoch"], history[mode + "_valid"], 'red', lw=1, label='validation ' + mode)
+    sns.lineplot(data=history, ax=ax, x="epoch", y=mode + "_train", label='train ' + mode, legend="brief")
+    sns.lineplot(data=history, ax=ax, x="epoch", y=mode + "_valid", label='validation ' + mode, legend="brief")
 
     idx, val = find_best(history[mode + "_valid"], mode == 'loss')
     ax.plot(idx, val, 'o', color='black')
-
-    #     ax.legend()
-    ax.legend(bbox_to_anchor=(0.5, -0.15), loc='lower center',
-              ncol=2, fontsize='large')
 
     if mode == 'loss':
         ax.set_ylim(bottom=-0.001, top=0.5)
     if mode == 'balanced_accuracy':
         ax.set_ylim(bottom=-0.001, top=1.1)
     ax.set_title(mode)
+
+def plot_results_ax(ax, results, columns):
+
+    def reshape_results(results, columns):
+        reshaped_columns = ["mode", "metric", "value"]
+        reshaped_df = pd.DataFrame(columns=reshaped_columns)
+        for col in list(results[columns].columns):
+            for idx, row in results.iterrows():
+                new_row = [[row["mode"], col, row[col]]]
+                row_df = pd.DataFrame(new_row, columns=reshaped_columns)
+                reshaped_df = pd.concat([reshaped_df, row_df], axis=0)
+
+        return reshaped_df
+
+    import seaborn as sns
+    import pandas as pd
+    order_list=[]
+    modes=sorted(list(results["mode"]))
+    for i,el in enumerate(results["mode"]):
+        if el=="train":
+            order_list.insert(0, el)
+        elif el=="validation":
+            if "train" not in modes:
+                order_list.insert(0, el)
+            else:
+                order_list.insert(1, el)
+        else:
+            order_list.append(el)
+    results=reshape_results(results, columns)
+
+    sns.barplot(data=results,hue="metric", x="mode",y="value", ax=ax)
+    ax.set_ylim(bottom=-0.001, top=1.1)
+
+
+
+
 
 def plot_bar_plots(ax, results, mode):
     def autolabel(ax, rects):
@@ -73,31 +104,6 @@ def plot_bar_plots(ax, results, mode):
               ncol=3, fontsize='large')
     ax.set_title("Model from: " + mode)
 
-def barplots_with_loss(params, results, history, saved_file_path=None):
-    num_figures = len(results.keys())
-    fig, axes = plt.subplots(2, num_figures, figsize=(int(12 * num_figures), 18))
-    str_suptitle = "Params: "
-
-    for i, line in enumerate(readable_params):
-        str_suptitle += line + ': ' + str(params[line]) + "; "
-
-    for k, mode in enumerate(results.keys()):
-        plot_bar_plots(axes[0][k], results[mode], mode)
-
-    plot_history(axes[1][0], history, mode='loss')
-    plot_history(axes[1][1], history, mode='balanced_accuracy')
-
-    axes[1][2].axis('off')
-
-    plt.suptitle(str_suptitle)
-    plt.subplots_adjust(left=None, right=None, top=None, bottom=None, wspace=None, hspace=None)
-
-    if saved_file_path is not None:
-        plt.savefig(saved_file_path)
-    else:
-        plt.show()
-    plt.close()
-
 def annotate(axes, cols, rows):
     for ax, col in zip(axes[0], cols):
         ax.annotate(col, xy=(0.5, 1), xytext=(0, 5),
@@ -113,7 +119,6 @@ def plot_hist(axes, stat, uncertainty_metric, rows, cols, separate_by_labels):
     import seaborn as sns
     import numpy as np
 
-
     xlim_list={"left_limit":[], "right_limit":[]}
 
     for i, selection_metric in enumerate(stat.keys()):
@@ -123,7 +128,6 @@ def plot_hist(axes, stat, uncertainty_metric, rows, cols, separate_by_labels):
                          ax=axes[j][i], stat="probability", bins=10)
             xlim_list["left_limit"].append(min(axes[j][i].get_xlim()))
             xlim_list["right_limit"].append(max(axes[j][i].get_xlim()))
-
 
     #set_xlim for all histogram plots
     xlim_left,xlim_right =np.min(xlim_list["left_limit"]), np.max(xlim_list["right_limit"])

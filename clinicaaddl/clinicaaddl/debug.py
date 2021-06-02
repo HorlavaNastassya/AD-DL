@@ -10,9 +10,10 @@ def get_args(model_path, MS_list, data_types):
     parser.add_argument("--model_path", default=model_path)
     # parser.add_argument("data_types", nargs='+', default=["results", "history", "uncertainty_distribution"])
     parser.add_argument("--data_types", nargs='+', default=data_types)
-    parser.add_argument("--MS_list", nargs='+', default=MS_list)
+    # parser.add_argument("--MS_list", nargs='+', default=MS_list)
     parser.add_argument("--metrics",default=None)
     parser.add_argument("--average_fold", type=str2bool, default=True)
+    parser.add_argument("--history_modes", nargs='+', default=["loss", "balanced_accuracy"])
 
 
 
@@ -36,7 +37,9 @@ if __name__ == "__main__":
     MS_list_dict = {'1.5T':['1.5T', '3T'], "3T": ['3T', '1.5T'], "1.5T-3T": ["1.5T-3T"]}
     # home_folder='/u/horlavanasta/MasterProject/'
     home_folder='/home/nastya/Documents/MasterProject/'
-    data_types=["results"]
+    data_types=["history", "uncertainty_distribution", "results"]
+    data_types=["history", "results"]
+
     isBayesian=True
 
     for MS in MS_main_list:
@@ -44,7 +47,7 @@ if __name__ == "__main__":
         model_types = ["Conv5_FC3"]
         MS_list = MS_list_dict[MS]
 
-        results_folder_general =os.path.join(home_folder, 'Code/ClinicaTools/AD-DL/results/', "Experiments_Bayesian" if isBayesian else "Experiments", 'Experiments-' + MS)
+        results_folder_general =os.path.join(home_folder, 'results/', "Experiments_Bayesian" if isBayesian else "Experiments", 'Experiments-' + MS)
         model_dir_general = os.path.join(home_folder,"DataAndExperiments/Experiments_3-fold/Experiments-" + MS, "NNs_Bayesian" if isBayesian else "NNs")
 
         for network in model_types:
@@ -57,5 +60,8 @@ if __name__ == "__main__":
                 args=get_args(f, MS_list, data_types)
                 args.get_test_from_bayesian=True
                 args.ba_inference_mode="mode"
-                data=get_data_generic(args)
+                args.MS_list=MS_list
+                args.output_path=None
+                args.result_metrics=["accuracy","sensitivity", "precision", "f1-score"]
+                plot_generic(args, MS)
 
