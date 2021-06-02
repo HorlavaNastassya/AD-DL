@@ -41,68 +41,49 @@ def plot_results_ax(ax, results, columns):
 
         return reshaped_df
 
+    def show_values_on_bars(axs):
+        def _show_on_single_plot(ax, factor=0.025):
+            for p in ax.patches:
+                _x = p.get_x() + p.get_width() / 2
+                _y = p.get_y() + p.get_height() +ax.get_ylim()[-1]*factor
+                value = '{:.2f}'.format(p.get_height())
+                ax.text(_x, _y, value, ha="center")
+
+        if isinstance(axs, np.ndarray):
+            for idx, ax in np.ndenumerate(axs):
+                _show_on_single_plot(ax)
+        else:
+            _show_on_single_plot(axs)
+
     import seaborn as sns
     import pandas as pd
-    order_list=[]
-    modes=sorted(list(results["mode"]))
-    for i,el in enumerate(results["mode"]):
-        if el=="train":
-            order_list.insert(0, el)
-        elif el=="validation":
-            if "train" not in modes:
-                order_list.insert(0, el)
-            else:
-                order_list.insert(1, el)
-        else:
-            order_list.append(el)
+
     results=reshape_results(results, columns)
 
-    sns.barplot(data=results,hue="metric", x="mode",y="value", ax=ax)
+    sns.barplot(data=results,hue="metric", x="mode", y="value", ax=ax, palette=sns.color_palette("Paired"), linewidth=1.5)
     ax.set_ylim(bottom=-0.001, top=1.1)
+    show_values_on_bars(ax)
 
 
+def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
+    import seaborn as sns
 
+    prediction_column = "predicted_label_from_%s" %inference_mode
+    data["Prediction is correct"] = data.apply(
+        lambda row: row["true_label"] == row[prediction_column], axis=1)
+    arguments = {"data": data, "x": "true_label", "y": uncertainty_metric,
+                 "hue": "Prediction is correct", "palette": "Set2", "ax": ax,
+                 "hue_order": [True, False]}
 
+    if catplot_type == "violinplot":
+        arguments["split"] = True
+        arguments["scale"] = "count"
 
-def plot_bar_plots(ax, results, mode):
-    def autolabel(ax, rects):
-        for rect in rects:
-            height = rect.get_height()
-            ax.text(rect.get_x() + rect.get_width() / 2., 1.02 * height,
-                    '%.2f' % (height),
-                    ha='center', va='bottom', fontsize=20)
-
-    def reshape_results(results):
-        metrics = {}
-        for key in results[list(results.keys())[0]].keys():
-            metrics[key] = []
-        for mode in results.keys():
-            for metric in results[mode].keys():
-                metrics[metric].append(results[mode][metric][0])
-        return metrics
-
-    ax.set_ylim(bottom=-0.001, top=1.1)
-    results_transposed = reshape_results(results)
-    N = len(results.keys())
-
-    ind = np.arange(N)
-    width = 0.21
-    width_ratio = 1.0
-    #     ax.set_prop_cycle('color', Pastel1_4.mpl_colors)
-    ax.set_prop_cycle('color', cm.get_cmap('Paired').colors)
-
-    for i, key in enumerate(results_transposed.keys()):
-        autolabel(ax, ax.bar(ind + width * i, results_transposed[key], width * width_ratio, label=key.capitalize(),
-                             edgecolor='dimgrey'))
-
-    xstips_position = ind + width
-
-    xsticklabels = [disease_type for disease_type in results.keys()]
-    ax.set_xticklabels(xsticklabels)
-    ax.set_xticks(xstips_position)
-    ax.legend(bbox_to_anchor=(0.5, -0.15), loc='lower center',
-              ncol=3, fontsize='large')
-    ax.set_title("Model from: " + mode)
+    if catplot_type == "stripplot":
+        arguments["dodge"] = True
+        arguments["size"] = 4
+        arguments["linewidth"] = 1
+    getattr(sns, catplot_type)(**arguments)
 
 def annotate(axes, cols, rows):
     for ax, col in zip(axes[0], cols):
@@ -114,6 +95,13 @@ def annotate(axes, cols, rows):
         ax.annotate(row, xy=(0, 0.5), xytext=(-ax.yaxis.labelpad - 5, 0),
                     xycoords=ax.yaxis.label, textcoords='offset points',
                     fontsize=15, ha='right', va='center')
+
+def set_ylims_axes(axes):
+    min_ylim=min(ax.get_ylim()[0] for ax in axes)
+    max_ylim=max(ax.get_ylim()[1] for ax in axes)
+    for ax in axes:
+        ax.set_ylim(bottom=min_ylim, top=max_ylim)
+
 
 def plot_hist(axes, stat, uncertainty_metric, rows, cols, separate_by_labels):
     import seaborn as sns
@@ -193,7 +181,7 @@ def plot_catplot(axes, stat, uncertainty_metric, rows, cols, inference_mode, cat
                 arguments["linewidth"]=1
             getattr(sns, catplot_type)(**arguments)
 
-    annotate(axes, cols, rows)
+    # annotate(axes, cols, rows)
 
 def plot_uncertainty_catplot(model_params, stat,  uncertainty_metric, inference_mode="from_mode", saved_file_path=None, results=None, catplot_type="swarmplot"):
     import matplotlib
@@ -227,14 +215,3 @@ def plot_uncertainty_catplot(model_params, stat,  uncertainty_metric, inference_
         plt.show()
     plt.close()
 
-
-
-
-# def scatter_variance_per_class(model_params, stat, plot_filename):
-#     import seaborn as sns
-#     st = stat["best_loss"]["test_1.5T"]
-#     x = np.array(st.class_variance.values.tolist())[:, 0]
-#     y = np.array(st.class_variance.values.tolist())[:, 1]
-#     sns.scatterplot(data=st, x=x, y=y, hue=st.true_label.values)
-#     plt.show()
-#     print("smth")

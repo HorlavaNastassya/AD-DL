@@ -5,48 +5,48 @@ class Plots():
     def __init__(self):
         self.description = "plots functionality"
 
-    @staticmethod
-    def barplots_loss(
-            args, model_params, history, results,
-            model_name, fold=None
-    ):
+    # @staticmethod
+    # def barplots_loss(
+    #         args, model_params, history, results,
+    #         model_name, fold=None
+    # ):
 
-        import os
-        from pathlib import Path
-        from .data_utils import get_results
-        import pandas as pd
-        import json
-        from .plot_utils import barplots_with_loss
-
-        folder_type = 'barplots_with_loss'
-
-        # history = pd.read_csv(os.path.join(args.model_path, 'fold-%i' % fold, 'training.tsv'),
-        #                       sep='\t')
-        # results =get_results(args.model_path, args.MS_list, fold)
-        path = os.path.join(args.output_path, folder_type)
-        os.makedirs(path, exist_ok=True)
-        file_name = model_name + '.png'
-        barplots_with_loss(model_params, results, history, os.path.join(path, file_name))
-        if args.save_best:
-            best_model_filename = os.path.join(args.path_to_best, "best_model_results.json")
-            if Path(best_model_filename).is_file():
-                with open(best_model_filename, "r") as f:
-                    reported_best_accuracies = json.load(f)
-            else:
-                reported_best_accuracies = {}
-                for ms_el in args.MS_list:
-                    reported_best_accuracies[ms_el] = {"max_value": 0}
-            for ms_el in args.MS_list:
-                for mode in results.keys():
-                    if results[mode]["test_" + ms_el]["f1-score"][0] > \
-                            reported_best_accuracies[ms_el]["max_value"]:
-                        reported_best_accuracies[ms_el]["max_value"] = \
-                            results[mode]["test_" + ms_el]["f1-score"][0]
-                        reported_best_accuracies[ms_el]["prediction_path"] = args.model_path
-                        reported_best_accuracies[ms_el]["params"] = model_params
-                    reported_best_accuracies[ms_el]["model_name"] = model_name
-            with open(best_model_filename, "w") as f:
-                json.dump(reported_best_accuracies, f)
+        # import os
+        # from pathlib import Path
+        # from .data_utils import get_results
+        # import pandas as pd
+        # import json
+        # from .plot_utils import barplots_with_loss
+        #
+        # folder_type = 'barplots_with_loss'
+        #
+        # # history = pd.read_csv(os.path.join(args.model_path, 'fold-%i' % fold, 'training.tsv'),
+        # #                       sep='\t')
+        # # results =get_results(args.model_path, args.MS_list, fold)
+        # path = os.path.join(args.output_path, folder_type)
+        # os.makedirs(path, exist_ok=True)
+        # file_name = model_name + '.png'
+        # barplots_with_loss(model_params, results, history, os.path.join(path, file_name))
+        # if args.save_best:
+        #     best_model_filename = os.path.join(args.path_to_best, "best_model_results.json")
+        #     if Path(best_model_filename).is_file():
+        #         with open(best_model_filename, "r") as f:
+        #             reported_best_accuracies = json.load(f)
+        #     else:
+        #         reported_best_accuracies = {}
+        #         for ms_el in args.MS_list:
+        #             reported_best_accuracies[ms_el] = {"max_value": 0}
+        #     for ms_el in args.MS_list:
+        #         for mode in results.keys():
+        #             if results[mode]["test_" + ms_el]["f1-score"][0] > \
+        #                     reported_best_accuracies[ms_el]["max_value"]:
+        #                 reported_best_accuracies[ms_el]["max_value"] = \
+        #                     results[mode]["test_" + ms_el]["f1-score"][0]
+        #                 reported_best_accuracies[ms_el]["prediction_path"] = args.model_path
+        #                 reported_best_accuracies[ms_el]["params"] = model_params
+        #             reported_best_accuracies[ms_el]["model_name"] = model_name
+        #     with open(best_model_filename, "w") as f:
+        #         json.dump(reported_best_accuracies, f)
 
     @staticmethod
     def uncertainty_distribution(
@@ -65,28 +65,10 @@ class Plots():
         plot_uncertainty_dist(model_params, stat, args.uncertainty_metric, separate_by_labels=args.separate_by_labels,
                               saved_file_path=os.path.join(path, file_name), results=results)
 
-    @staticmethod
-    def uncertainty_catplot(
-            args, model_params, stat, results,
-            model_name, fold=None,
-    ):
-        import os
-        from .data_utils import get_baesian_stat, get_results
 
-        from .plot_utils import plot_uncertainty_catplot
-        folder_type = '%s_uncertainty_%s' % (args.uncertainty_metric, args.catplot_type)
-        # stat = get_baesian_stat(args.model_path, args.MS_list, fold, args.uncertainty_metric)
-        path = os.path.join(args.output_path, folder_type)
-        os.makedirs(path, exist_ok=True)
-        file_name = model_name + '.png'
-        # results = get_results(args.model_path, args.MS_list, fold) if args.include_results else None
-        plot_uncertainty_catplot(model_params, stat, args.uncertainty_metric, inference_mode=args.inference_mode,
-                                 saved_file_path=os.path.join(path, file_name), results=results,
-                                 catplot_type=args.catplot_type)
 
 
 def get_rows_and_cols(data):
-    import numpy as np
     rows_matrix = {}
     cols_matrix = {}
     for data_type in data.keys():
@@ -98,7 +80,7 @@ def get_rows_and_cols(data):
 
         if data_type == "uncertainty_distribution":
             rows_matrix[data_type] = [test_MS.replace("_", " ") for test_MS in
-                                      list(data[data_type].groupby("mode", replace_index=False).groups.keys())]
+                                      list(data[data_type][list(data[data_type].keys())[0]].groupby("mode", as_index=False, sort=False).groups.keys())]
         else:
             rows_matrix[data_type] = [None]
 
@@ -106,9 +88,6 @@ def get_rows_and_cols(data):
     num_cols = max([len(cols_matrix[col]) for col in cols_matrix.keys()])
     return rows_matrix, cols_matrix, num_rows, num_cols
 
-
-def plot_uncertainty_distribution(args, data, fig, row, figshape):
-    pass
 
 
 def plot_history(args, data, fig, row, figshape):
@@ -130,6 +109,21 @@ def plot_results(args, data, fig, row, figshape):
     return row + 1
 
 
+def plot_uncertainty_distribution(args, data, fig, row, figshape):
+    from .plot_utils import plot_catplot_ax, set_ylims_axes
+    axes = []
+
+    for col, selection_mode in enumerate(list(data.keys())):
+        for j, (mode, mode_group) in enumerate(data[selection_mode].groupby("mode", as_index=False, sort=False)):
+            ax = plt.subplot2grid(shape=figshape, loc=(row+j, col), fig=fig)
+            plot_catplot_ax(ax,mode_group, args.uncertainty_metric, args.ba_inference_mode, args.catplot_type )
+            ax.set_title(selection_mode+"; "+mode)
+
+            axes.append(ax)
+
+
+    set_ylims_axes(axes)
+    return row+2
 
 def plot_combined_plots(args, model_params, saved_file_path, data=None):
     import matplotlib.pyplot as plt
@@ -152,6 +146,8 @@ def plot_combined_plots(args, model_params, saved_file_path, data=None):
     plt.suptitle(str_suptitle)
 
     # plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.1, hspace=0.1)
+    plt.subplots_adjust( left=0.05, right=0.95, top=0.95, bottom=0.05,)
+
     if saved_file_path is not None:
         plt.savefig(saved_file_path)
     else:

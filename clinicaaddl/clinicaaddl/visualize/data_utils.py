@@ -67,8 +67,8 @@ def get_results(args, average_fold=True):
     if average_fold:
         for key in results_dict.keys():
             res_df = results_dict[key].drop(
-                ["total_loss", "image_id"], axis=1)
-            resulting_metrics_dict[key] = res_df.groupby(["mode"], as_index=False).agg(np.mean)
+                ["total_loss", "image_id", "fold"], axis=1)
+            resulting_metrics_dict[key] = res_df.groupby(["mode"], as_index=False, sort=False).agg(np.mean)
         resulting_metrics_dict = {"folds_average": resulting_metrics_dict}
 
     else:
@@ -119,9 +119,15 @@ def get_uncertainty_distribution(args, average_fold=True):
     resulting_stat_dict = {}
     if average_fold:
         for key in stat_dict.keys():
-            stat_df = stat_dict[key].drop(
-                ["true_label", "predicted_label_from_mean", "predicted_label_from_mode"], axis=1)
-            resulting_stat_dict[key] = stat_df.groupby(["mode", "participant_id"], as_index=False).agg(np.mean)
+            stat_df = stat_dict[key]
+            additional_colums_df = stat_df[
+                ["true_label", "predicted_label_from_mean", "predicted_label_from_mode", "mode", "participant_id"]]
+            additional_colums_df = additional_colums_df.groupby(["mode", "participant_id"], as_index=False,
+                                                                sort=False).agg(pd.Series.mode)
+            stat_df = stat_df.drop(
+                ["true_label", "predicted_label_from_mean", "predicted_label_from_mode", "fold"], axis=1)
+            resulting_stat_dict[key] = stat_df.groupby(["mode", "participant_id"], as_index=False, sort=False).agg(np.mean)
+            resulting_stat_dict[key]=resulting_stat_dict[key].merge(additional_colums_df, on=["mode", "participant_id"], how="right")
         resulting_stat_dict = {"folds_average": resulting_stat_dict}
     else:
         for key in stat_dict.keys():

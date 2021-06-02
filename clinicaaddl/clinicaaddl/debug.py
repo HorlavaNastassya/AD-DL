@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # home_folder='/u/horlavanasta/MasterProject/'
     home_folder='/home/nastya/Documents/MasterProject/'
     data_types=["history", "uncertainty_distribution", "results"]
-    data_types=["history", "results"]
+    data_types=["uncertainty_distribution", "results", "history"]
 
     isBayesian=True
 
@@ -63,5 +63,7 @@ if __name__ == "__main__":
                 args.MS_list=MS_list
                 args.output_path=None
                 args.result_metrics=["accuracy","sensitivity", "precision", "f1-score"]
+                args.uncertainty_metric="total_variance"
+                args.catplot_type = "violinplot"
                 plot_generic(args, MS)
 
