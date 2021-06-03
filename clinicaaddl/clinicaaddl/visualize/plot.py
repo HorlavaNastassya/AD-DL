@@ -134,7 +134,7 @@ def plot_combined_plots(args, model_params, saved_file_path, data=None):
     fig = plt.figure(figsize=((int(8 * num_cols), int(6 * num_rows))))
 
     row = 0
-    for data_key in data.keys():
+    for data_key in sorted(list(data.keys()), reverse=True):
         row = eval("plot_%s" % (data_key))(args, data=data[data_key], fig=fig, figshape=(num_rows, num_cols), row=row)
 
 
@@ -182,13 +182,14 @@ def plot_generic(
             folder_name += '%s_uncertainty' % (args.uncertainty_metric)
         else:
             folder_name += data_type
+        folder_name += "_"
 
     data = get_data_generic(args)
 
     for fold_key in data.keys():
 
         if not args.average_fold:
-            folder_fold_name = os.path.join("separate_folds", fold_key)
+            folder_fold_name = os.path.join("separate_folds", "fold-%s"%fold_key)
         else:
             folder_fold_name = fold_key
 

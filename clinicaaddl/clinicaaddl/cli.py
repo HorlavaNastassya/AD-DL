@@ -183,7 +183,7 @@ def visualize_func(args):
               "Experiments-" in x][0]
 
     args.MS_list=MS_list_dict[MS] if args.MS_list is None else args.MS_list
-    plot_generic(args, magnet_strength=MS)
+    plot_generic(args, training_MS=MS)
 
 
 def bayesian_func(args):
@@ -1203,10 +1203,12 @@ def parse_command_line():
         default=["loss", "balanced_accuracy"])
 
     visualize_parser.add_argument(
-        "--metrics",
+        "--result_metrics",
         help='''In case of plotting results: which metrics to plot (accuracy, f1-score, ...). ''',
         nargs='+',
-        default=["accuracy", "balanced_accuracy", "sensitivity", "specificity", "precision", "npv","f1-score" ])
+        default=["accuracy", "sensitivity",  "precision", "f1-score"],
+    choices=["accuracy", "balanced_accuracy", "sensitivity", "specificity", "precision", "npv","f1-score" ]
+    )
 
     visualize_parser.add_argument(
         '--MS',
@@ -1247,7 +1249,7 @@ def parse_command_line():
         '--catplot_type',
         help='Indicates which type of catplot to plot: stripplot,violinplot ',
         type=str,
-        default='stripplot',
+        default='violinplot',
         choices=["stripplot", "violinplot", "histogram"])
 
     # visualize_subparser = visualize_parser.add_subparsers(

@@ -13,11 +13,7 @@ def get_results(args, average_fold=True):
     import pathlib
     import numpy as np
 
-    if args.metrics is None:
-        metrics = ["accuracy", 'sensitivity', 'precision', 'f1-score']
-    else:
-        metrics = args.metrics
-
+    
     if args.get_test_from_bayesian:
         stat_dict = get_uncertainty_distribution(args, average_fold=False)
 
