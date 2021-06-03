@@ -43,7 +43,7 @@ def get_results(args, average_fold=True):
                     values_df = stat_dict[fold][selection_metric].groupby("mode")
                     values_df = values_df.get_group(mode)
                     prediction_column = "predicted_label_from_%s" % args.ba_inference_mode
-                    test_diagnosis_dict = evaluate_prediction(values_df.true_label.values.astype(int),
+                    test_diagnosis_dict = evaluate_prediction(values_df[["true_label"]].values.astype(int),
                                                               values_df[[prediction_column]].values.astype(int))
                     test_diagnosis_df = pd.DataFrame(test_diagnosis_dict, index=[0])
                     test_diagnosis_df = test_diagnosis_df.assign(fold=fold,
