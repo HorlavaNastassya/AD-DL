@@ -56,7 +56,7 @@ def plot_uncertainty_distribution(args, data, fig, row, figshape):
 
 
     set_ylims_axes(axes)
-    return row+2
+    return row+j
 
 def plot_combined_plots(args, model_params, saved_file_path, data=None):
     import matplotlib.pyplot as plt
