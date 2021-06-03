@@ -42,7 +42,7 @@ def get_results(args, average_fold=True):
                 modes.append('test_' + ms_el)
 
             for mode in modes:
-                if "test" in mode and args.get_test_from_bayesian:
+                if "test" in mode and args.get_test_from_bayesian and args.bayesian:
 
                     values_df = stat_dict[fold][selection_metric].groupby("mode")
                     values_df = values_df.get_group(mode)
@@ -179,7 +179,6 @@ def reshape_dictionary(dict_sample):
 def get_data_generic(args, reshape_dict=True):
     data = {}
     for data_type in args.data_types:
-
         data[data_type] = eval("get_%s" % data_type)(args, args.average_fold)
     #data is now in format {data_type: {fold_0:, ...fold_n etc}}
     if reshape_dict:

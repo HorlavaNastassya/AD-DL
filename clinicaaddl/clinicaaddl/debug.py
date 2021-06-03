@@ -11,7 +11,7 @@ def get_args(model_path, MS_list, data_types):
     # parser.add_argument("data_types", nargs='+', default=["results", "history", "uncertainty_distribution"])
     parser.add_argument("--data_types", nargs='+', default=data_types)
     # parser.add_argument("--MS_list", nargs='+', default=MS_list)
-    parser.add_argument("--metrics",default=None)
+    # parser.add_argument("--metrics",default=None)
     parser.add_argument("--average_fold", type=str2bool, default=True)
     parser.add_argument("--history_modes", nargs='+', default=["loss", "balanced_accuracy"])
 

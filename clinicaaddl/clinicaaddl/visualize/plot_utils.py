@@ -60,7 +60,9 @@ def plot_results_ax(ax, results, columns):
 
     results=reshape_results(results, columns)
 
-    sns.barplot(data=results,hue="metric", x="mode", y="value", ax=ax, palette=sns.color_palette("Paired"), linewidth=1.5)
+    # sns.barplot(data=results,hue="metric", x="mode", y="value", ax=ax, palette=sns.color_palette("Paired"), linewidth=1.5)
+    sns.barplot(data=results,hue="metric", x="mode", y="value", ax=ax, palette="Paired", linewidth=1.5)
+
     ax.set_ylim(bottom=-0.001, top=1.1)
     show_values_on_bars(ax)
 

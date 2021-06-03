@@ -173,6 +173,7 @@ def plot_generic(
         params = json.load(f)
 
     params['training MS'] = training_MS
+    args.bayesian=params["bayesian"]
     model_name = os.path.basename(os.path.normpath(currentDirectory))
 
     folder_name = ''
