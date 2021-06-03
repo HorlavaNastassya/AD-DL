@@ -25,12 +25,18 @@ module load pytorch/gpu-cuda-11.2/1.8.1
 
 BATCH=8
 # NUM_SPLITS=1
-SPLIT=2
-NUM_SPLITS=3
+# SPLIT=2
+if [ -z "$3" ]
+  then
+    NUM_SPLITS=3
+else
+  NUM_SPLITS=$3
+fi
+
 NPROC=2
 # Other options
-OPTIONS="--n_splits $NUM_SPLITS --split $SPLIT --nproc $NPROC --batch_size $BATCH"
-# OPTIONS="--n_splits $NUM_SPLITS --nproc $NPROC --batch_size $BATCH"
+# OPTIONS="--n_splits $NUM_SPLITS --split $SPLIT --nproc $NPROC --batch_size $BATCH"
+OPTIONS="--n_splits $NUM_SPLITS --nproc $NPROC --batch_size $BATCH"
 
 
 # Computation ressources

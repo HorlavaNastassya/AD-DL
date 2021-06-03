@@ -48,15 +48,18 @@ def get_results(args, average_fold=True):
                     test_diagnosis_df = pd.DataFrame(test_diagnosis_dict, index=[0])
                     test_diagnosis_df = test_diagnosis_df.assign(fold=fold,
                                                                  mode=mode)
+                    results_dict[selection_metric] = pd.concat([results_dict[selection_metric], test_diagnosis_df],
+                                                           axis=0)
 
                 else:
                     test_diagnosis_path = os.path.join(cnn_classification_dir, selection_metric,
                                                        '%s_image_level_metrics.tsv' % (mode))
-                    test_diagnosis_df = pd.read_csv(test_diagnosis_path, sep='\t')
-                    test_diagnosis_df = test_diagnosis_df.assign(fold=fold,
+                    if os.path.exists(test_diagnosis_path):
+                        test_diagnosis_df = pd.read_csv(test_diagnosis_path, sep='\t')
+                        test_diagnosis_df = test_diagnosis_df.assign(fold=fold,
                                                                  mode=mode)
 
-                results_dict[selection_metric] = pd.concat([results_dict[selection_metric], test_diagnosis_df],
+                        results_dict[selection_metric] = pd.concat([results_dict[selection_metric], test_diagnosis_df],
                                                            axis=0)
 
     resulting_metrics_dict = {}
