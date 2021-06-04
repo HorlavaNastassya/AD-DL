@@ -21,8 +21,8 @@ fi
 
 # Input arguments to clinicaaddl
 CAPS_DIR="$HOME//MasterProject/ADNI_data/CAPS"
-TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments/Experiments-${MS}/labels/train"
-OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments/Experiments-${MS}/NNs/${NETWORK}"
+TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments_5-fold/Experiments-${MS}/labels/train"
+OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_5-fold/Experiments-${MS}/NNs/${NETWORK}"
 
 # Dataset Management
 PREPROCESSING='linear'

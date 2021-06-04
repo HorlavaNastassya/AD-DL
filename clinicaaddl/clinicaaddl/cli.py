@@ -142,6 +142,9 @@ def train_func(args):
         train_autoencoder(args)
     elif args.network_type == "cnn":
         train_single_cnn(args)
+        with open(os.path.join(args.output_dir, "status.txt"), "w") as f:
+            f.write("Status: job was finished for all folds")
+        
     elif args.network_type == "multicnn":
         train_multi_cnn(args)
     else:

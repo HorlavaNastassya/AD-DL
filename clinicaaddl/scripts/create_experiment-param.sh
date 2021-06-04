@@ -3,14 +3,17 @@ module load anaconda/3/2020.02
 module load cuda/11.2
 module load pytorch/gpu-cuda-11.2/1.8.1
 
+
 # Experiment training CNN
 
 # Importnant args
 
 EPOCHS=100
 BATCH=10
-LR=1e-5
 BAYESIAN=True
+
+for LR in 1e-4 1e-5
+do
 for MS in '1.5T-3T' '1.5T' '3T'
 do
     for NETWORK in "ResNet18" "SEResNet18" "ResNet18Expanded" "SEResNet18Expanded" "Conv5_FC3"
@@ -28,8 +31,8 @@ do
                 NN_FOLDER="NNs"
                 fi
                 
-                TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments_3-fold/Experiments-${MS}/labels/train"
-                OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
+                TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments_5-fold/Experiments-${MS}/labels/train"
+                OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_5-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
 
                 # Dataset Management
                 PREPROCESSING='linear'
@@ -62,7 +65,7 @@ do
 
 
                 TASK_NAME="${TASK// /_}"
-                SAMPLER="weighted"
+                SAMPLER="random"
 
 #                 echo $TASK_NAME
 
@@ -94,4 +97,5 @@ do
             done
         done
     done
+done
 done

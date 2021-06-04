@@ -95,3 +95,4 @@
 /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18/subject_model-ResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_130011
 /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18/subject_model-ResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-WeightedCrossEntropy_augmFalse_20210528_130008
 /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18/subject_model-ResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-WeightedCrossEntropy_augmTrue_20210528_125938
+/u/horlavanasta/MasterProject/DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18/subject_model-SEResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_130029/

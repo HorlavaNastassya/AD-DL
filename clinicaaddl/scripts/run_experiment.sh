@@ -49,3 +49,5 @@ fi
 # Run clinicaaddl
 srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py train \
   $1 --resume $FROM_CHECKPOINT $OPTIONS
+  
+  
