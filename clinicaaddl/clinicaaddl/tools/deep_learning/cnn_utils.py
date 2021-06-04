@@ -204,6 +204,7 @@ def train(model, train_loader, valid_loader, criterion, optimizer, resume, log_d
         row = [epoch, i, t_current,
                results_train["balanced_accuracy"], mean_loss_train,
                results_valid["balanced_accuracy"], mean_loss_valid]
+
         row_df = pd.DataFrame([row], columns=columns)
         with open(filename, 'a') as f:
             row_df.to_csv(f, header=False, index=False, sep='\t')

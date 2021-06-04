@@ -22,14 +22,13 @@ def get_rows_and_cols(data):
     return rows_matrix, cols_matrix, num_rows, num_cols
 
 
-
 def plot_history(args, data, fig, row, figshape):
     from .plot_utils import plot_history_ax
 
     for col, history_mode in enumerate(args.history_modes):
         ax = plt.subplot2grid(shape=figshape, loc=(row, col), fig=fig)
         plot_history_ax(ax, data, mode=history_mode)
-    return row + 1
+
 
 
 def plot_results(args, data, fig, row, figshape):
@@ -39,7 +38,7 @@ def plot_results(args, data, fig, row, figshape):
         ax = plt.subplot2grid(shape=figshape, loc=(row, col), fig=fig)
         plot_results_ax(ax, data[selection_mode], args.result_metrics)
         ax.set_title(selection_mode)
-    return row + 1
+
 
 
 def plot_uncertainty_distribution(args, data, fig, row, figshape):
@@ -51,12 +50,10 @@ def plot_uncertainty_distribution(args, data, fig, row, figshape):
             ax = plt.subplot2grid(shape=figshape, loc=(row+j, col), fig=fig)
             plot_catplot_ax(ax,mode_group, args.uncertainty_metric, args.ba_inference_mode, args.catplot_type )
             ax.set_title(selection_mode+"; "+mode)
-
             axes.append(ax)
 
-
     set_ylims_axes(axes)
-    return row+j
+
 
 def plot_combined_plots(args, model_params, saved_file_path, data=None):
     import matplotlib.pyplot as plt
@@ -68,8 +65,8 @@ def plot_combined_plots(args, model_params, saved_file_path, data=None):
 
     row = 0
     for data_key in sorted(list(data.keys()), reverse=True):
-        row = eval("plot_%s" % (data_key))(args, data=data[data_key], fig=fig, figshape=(num_rows, num_cols), row=row)
-
+        eval("plot_%s" % (data_key))(args, data=data[data_key], fig=fig, figshape=(num_rows, num_cols), row=row)
+        row+=len(rows_matrix[data_key])
 
     str_suptitle = "\n Params: "
     for i, line in enumerate(readable_params):

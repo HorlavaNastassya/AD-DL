@@ -1206,7 +1206,7 @@ def parse_command_line():
         "--result_metrics",
         help='''In case of plotting results: which metrics to plot (accuracy, f1-score, ...). ''',
         nargs='+',
-        default=["accuracy", "sensitivity",  "precision", "f1-score"],
+        default=["sensitivity",  "precision", "accuracy", "f1-score"],
     choices=["accuracy", "balanced_accuracy", "sensitivity", "specificity", "precision", "npv","f1-score" ]
     )
 

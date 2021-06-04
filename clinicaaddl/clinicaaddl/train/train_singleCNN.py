@@ -69,6 +69,7 @@ def train_single_cnn(params):
             params.output_dir, 'fold-%i' % fi)
         model_dir = os.path.join(fold_dir, 'models')
 
+
         training_df, valid_df = load_data(
             params.tsv_path,
             params.diagnoses,
@@ -110,17 +111,21 @@ def train_single_cnn(params):
         #         optimizer = getattr(torch.optim, params.optimizer)(filter(lambda x: x.requires_grad, model.parameters()),
         #                                                            lr=params.learning_rate,
         #                                                            weight_decay=params.weight_decay)
+        resume_fold = params.resume
+        if params.resume:
+            if os.path.exists(fold_dir):
+                model, beginning_epoch = load_model(model, model_dir, params.gpu, 'checkpoint.pth.tar')
+                optimizer_path = os.path.join(model_dir, 'optimizer.pth.tar')
+                optimizer, optimizer_epoch = load_optimizer(optimizer_path, model, params.gpu)
 
-        if params.resume and os.path.exists(fold_dir):
-            model, beginning_epoch = load_model(model, model_dir, params.gpu, 'checkpoint.pth.tar')
-            optimizer_path = os.path.join(model_dir, 'optimizer.pth.tar')
-            optimizer, optimizer_epoch = load_optimizer(optimizer_path, model, params.gpu)
+                if beginning_epoch != optimizer_epoch:
+                    print('!!! Last model epoch and last optimizer_epoch does not match!!!')
+                params.beginning_epoch = beginning_epoch + 1
 
-            if beginning_epoch != optimizer_epoch:
-                print('!!! Last model epoch and last optimizer_epoch does not match!!!')
-            params.beginning_epoch = beginning_epoch + 1
+            else:
+                resume_fold = False
 
-        if not params.resume:
+        if not resume_fold:
             model = transfer_learning(model, fi, source_path=params.transfer_learning_path,
                                       gpu=params.gpu, selection=params.transfer_learning_selection,
                                       logger=main_logger)
@@ -133,45 +138,33 @@ def train_single_cnn(params):
         # toDO: resume as argument from command line
         if params.beginning_epoch<params.epochs:
             train(model, train_loader, valid_loader, criterion,
-                  optimizer, params.resume, log_dir, model_dir, params, train_logger)
+                  optimizer, resume_fold, log_dir, model_dir, params, train_logger)
 
-            test_single_cnn(model, params.output_dir, train_loader, "train",
-                            fi, criterion, params.mode, eval_logger, params.selection_threshold, gpu=params.gpu)
-            test_single_cnn(model, params.output_dir, valid_loader, "validation",
-                            fi, criterion, params.mode, eval_logger, params.selection_threshold, gpu=params.gpu)
+        test_single_cnn(model, params.output_dir, train_loader, "train",
+                            fi, criterion, params.mode, eval_logger, params.selection_threshold, gpu=params.gpu, skip_if_exist=True)
+        test_single_cnn(model, params.output_dir, valid_loader, "validation",
+                            fi, criterion, params.mode, eval_logger, params.selection_threshold, gpu=params.gpu,  skip_if_exist=True)
 
 
 def test_single_cnn(model, output_dir, data_loader, subset_name, split, criterion, mode, logger, selection_threshold,
-                    gpu=False):
+                    gpu=False, skip_if_exist=False):
 
-    for selection in ["best_balanced_accuracy", "best_loss"]:
-        # load the best trained model during the training
-        model, best_epoch = load_model(model, os.path.join(output_dir, 'fold-%i' % split, 'models', selection),
-                                       gpu=gpu, filename='model_best.pth.tar')
+    for selection in ["best_balanced_accuracy", "best_loss", "last_checkpoint"]:
+        if skip_if_exist:
+            if not os.path.exists(os.path.join(output_dir, 'fold-%i' % split, 'cnn_classification', selection, '%s_%s_level_prediction.tsv' % (subset_name, mode))):
+                # load the best trained model during the training
+                model_filename='checkpoint.pth.tar' if selection == "last_checkpoint" else 'model_best.pth.tar'
 
-        results_df, metrics = test(model, data_loader, gpu, criterion, mode)
-        logger.info("%s level %s balanced accuracy is %f for model selected on %s"
-                    % (mode, subset_name, metrics["balanced_accuracy"], selection))
+                model, best_epoch = load_model(model, os.path.join(output_dir, 'fold-%i' % split, 'models', selection),
+                                               gpu=gpu, filename=model_filename)
 
-        mode_level_to_tsvs(output_dir, results_df, metrics, split, selection, mode, dataset=subset_name)
+                results_df, metrics = test(model, data_loader, gpu, criterion, mode)
+                logger.info("%s level %s balanced accuracy is %f for model selected on %s"
+                            % (mode, subset_name, metrics["balanced_accuracy"], selection))
 
-        # Soft voting
-        if mode in ["patch", "roi", "slice"]:
-            soft_voting_to_tsvs(output_dir, split, logger=logger, selection=selection, mode=mode,
-                                dataset=subset_name, selection_threshold=selection_threshold)
+                mode_level_to_tsvs(output_dir, results_df, metrics, split, selection, mode, dataset=subset_name)
 
-
-    model, last_epoch = load_model(model, os.path.join(output_dir, 'fold-%i' % split, 'models'),
-                                   gpu=gpu, filename='checkpoint.pth.tar')
-
-    results_df, metrics = test(model, data_loader, gpu, criterion, mode)
-    selection="last_checkpoint"
-    logger.info("%s level %s balanced accuracy is %f for model selected on %s"
-                % (mode, subset_name, metrics["balanced_accuracy"], selection))
-
-    mode_level_to_tsvs(output_dir, results_df, metrics, split, selection, mode, dataset=subset_name)
-
-    # Soft voting
-    if mode in ["patch", "roi", "slice"]:
-        soft_voting_to_tsvs(output_dir, split, logger=logger, selection=selection, mode=mode,
-                            dataset=subset_name, selection_threshold=selection_threshold)
+                # Soft voting
+                if mode in ["patch", "roi", "slice"]:
+                    soft_voting_to_tsvs(output_dir, split, logger=logger, selection=selection, mode=mode,
+                                        dataset=subset_name, selection_threshold=selection_threshold)
