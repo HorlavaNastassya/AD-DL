@@ -153,9 +153,15 @@ def test_single_cnn(model, output_dir, data_loader, subset_name, split, criterio
         if skip_if_exist:
             if not os.path.exists(os.path.join(output_dir, 'fold-%i' % split, 'cnn_classification', selection, '%s_%s_level_prediction.tsv' % (subset_name, mode))):
                 # load the best trained model during the training
-                model_filename='checkpoint.pth.tar' if selection == "last_checkpoint" else 'model_best.pth.tar'
-
-                model, best_epoch = load_model(model, os.path.join(output_dir, 'fold-%i' % split, 'models', selection),
+                
+                if selection == "last_checkpoint":
+                    full_model_path = os.path.join(output_dir, 'fold-%i' % split, 'models')
+                    model_filename = 'checkpoint.pth.tar'
+                else:
+                    full_model_path = os.path.join(output_dir, 'fold-%i' % split, 'models', selection)
+                    model_filename = 'model_best.pth.tar'
+                    
+                model, best_epoch = load_model(model, full_model_path,
                                                gpu=gpu, filename=model_filename)
 
                 results_df, metrics = test(model, data_loader, gpu, criterion, mode)

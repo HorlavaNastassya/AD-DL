@@ -8,8 +8,8 @@
 #SBATCH --mem=92500
 #SBATCH --mail-type=END
 #SBATCH --mail-user=g.nasta.work@gmail.com
-#SBATCH -o logs/HLR_%j.out
-#SBATCH -e logs/HLR_%j.err
+#SBATCH -o logs/HLR_%x_%j.out
+#SBATCH -e logs/HLR_%x_%j.err
 echo $1
 if [ -z "$2" ]
   then
