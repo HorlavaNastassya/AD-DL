@@ -36,7 +36,7 @@ OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_3-fold/Experimen
 POSTFIX="test_${MS}"
                 
 for f in ${OUTPUT_DIR}/*; do
-    if [ -d "$f" ] &&  [[ $f =~ "subject_model" ]] &&  [[ $f =~ "default" ]] ; then
+    if [ -d "$f" ] &&  [[ $f =~ "subject_model" ]] &&  [ ! -f "${f}/status.txt" ]  ; then
 # Will not run if no directories are available
         echo -e "$f"
         srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TSV_PATH $f $POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint

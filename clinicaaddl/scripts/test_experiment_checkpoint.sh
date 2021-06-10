@@ -19,7 +19,7 @@ module load pytorch/gpu/1.6.0
 
 # Importnant args
 
-BAYESIAN=False
+BAYESIAN=True
 NBR_BAYESIAN_ITER=10
 
 if [ -z "$1" ]
@@ -39,17 +39,17 @@ do
         NN_FOLDER="NNs"
     fi
                 
-    OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
+    OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
                 # Dataset Management
     for f in ${OUTPUT_DIR}/*; do
-        if [ -d "$f" ] &&  [[ $f =~ "subject_model" ]]; then
+        if [ -d "$f" ] &&  [[ $f =~ "subject_model" ]] &&  [[ $f =~ "WeightedCrossEntropy" ]]; then
                 # Will not run if no directories are available
             echo -e "$f"
-            TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments/Experiments-${MS}/labels/train/train_splits-1/split-0/"
+            TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments_3-fold/Experiments-${MS}/labels/train/train_splits-1/split-0/"
             POSTFIX="train"
             srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TSV_PATH $f $POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics last_checkpoint
             
-            TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments/Experiments-${MS}/labels/train/validation_splits-1/split-0/"
+            TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments_3-fold/Experiments-${MS}/labels/train/validation_splits-1/split-0/"
             POSTFIX="validation"
             srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TSV_PATH $f $POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics last_checkpoint
         fi

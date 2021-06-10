@@ -162,58 +162,6 @@ def plot_uncertainty_dist(model_params, stat,  uncertainty_metric, separate_by_l
         plt.show()
     plt.close()
 
-def plot_catplot(axes, stat, uncertainty_metric, rows, cols, inference_mode, catplot_type):
-    import seaborn as sns
 
 
-    for i, selection_metric in enumerate(stat.keys()):
-        for j, test_MS in enumerate(stat[selection_metric].keys()):
-            bayesian_stat_df = stat[selection_metric][test_MS]
-            prediction_column = "predicted_label_%s" % inference_mode
-            bayesian_stat_df["Prediction is correct"] = bayesian_stat_df.apply(lambda row: row["true_label"] == row[prediction_column], axis=1)
-            arguments={"data": bayesian_stat_df, "x":"true_label", "y": uncertainty_metric, "hue": "Prediction is correct", "palette":"Set2", "ax":axes[j][i], "hue_order":[True, False]}
-            
-            if catplot_type=="violinplot":
-                arguments["split"]=True
-                arguments["scale"]="count"
-                
-            if catplot_type=="stripplot":
-                arguments["dodge"]=True
-                arguments["size"]=4
-                arguments["linewidth"]=1
-            getattr(sns, catplot_type)(**arguments)
-
-    # annotate(axes, cols, rows)
-
-def plot_uncertainty_catplot(model_params, stat,  uncertainty_metric, inference_mode="from_mode", saved_file_path=None, results=None, catplot_type="swarmplot"):
-    import matplotlib
-
-    # font = {
-    #     # 'family': 'normal',
-    #         'weight': 'bold',
-    #         'size': 18}
-    #
-    # matplotlib.rc('font', **font)
-
-    cols = [selection_metric.replace("_", " ") for selection_metric in stat.keys()]
-    rows = [test_MS.replace("_", " ") for test_MS in stat[list((stat.keys()))[0]].keys()]
-
-    str_suptitle = "Params: "
-    for i, line in enumerate(readable_params):
-        str_suptitle += line + ': ' + str(model_params[line]) + "; "
-
-    num_rows=len(rows)+1 if results else len(rows)
-    fig, axes = plt.subplots(num_rows, len(cols), figsize=(int(12 * len(cols)), int(9 * num_rows)), sharey="row")
-    plot_catplot(axes, stat,uncertainty_metric, rows, cols, inference_mode, catplot_type)
-    if results:
-        for k, mode in enumerate(results.keys()):
-            plot_bar_plots(axes[-1][k], results[mode], mode)
-
-    plt.suptitle(str_suptitle, fontsize="large", fontweight="bold")
-    plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.1, hspace=0.1)
-    if saved_file_path is not None:
-        plt.savefig(saved_file_path)
-    else:
-        plt.show()
-    plt.close()
 

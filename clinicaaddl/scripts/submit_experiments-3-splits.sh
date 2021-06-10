@@ -1,20 +1,36 @@
 #!/bin/bash
 
-# echo "resume for WeightedCrossEntropy and 3 folds"
-# for MS in '1.5T-3T' '1.5T' '3T' 
-# do
-#     for NETWORK in "ResNet18" "SEResNet18" "ResNet18Expanded" "SEResNet18Expanded" "Conv5_FC3"
-#     do
-#         NN_FOLDER="NNs_Bayesian"
-#         OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
-#         for f in ${OUTPUT_DIR}/*; do
-#             if [ -d "$f" ] &&  [[ $f =~ "subject_model" ]] &&  [[ $f =~ "WeightedCrossEntropy" ]] ; then
-#             echo $f
-#                 sbatch run_experiment_w_test.sh $f True 3
-#             fi
-#         done            
-#     done
-# done
+echo "resume for 5 folds"
+for MS in '1.5T-3T' '1.5T' '3T' 
+do
+    for NETWORK in "ResNet18" "SEResNet18" "ResNet18Expanded" "SEResNet18Expanded" "Conv5_FC3"
+    do
+        NN_FOLDER="NNs_Bayesian"
+        OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_5-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
+        for f in ${OUTPUT_DIR}/*; do
+            if [ -d "$f" ] &&  [[ $f =~ "subject_model" ]] && [ ! -f "${f}/status.txt" ] ; then
+                echo $f
+                sbatch run_experiment_w_test.sh $f True 5
+            fi
+        done            
+    done
+done
+
+echo "resume for 3 folds"
+for MS in '1.5T-3T' '1.5T' '3T' 
+do
+    for NETWORK in "ResNet18" "SEResNet18" "ResNet18Expanded" "SEResNet18Expanded" "Conv5_FC3"
+    do
+        NN_FOLDER="NNs_Bayesian"
+        OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
+        for f in ${OUTPUT_DIR}/*; do
+            if [ -d "$f" ] &&  [[ $f =~ "subject_model" ]] && [[ $f =~ "Weighted" ]] && [ ! -f "${f}/status.txt" ] ; then
+                echo $f
+                sbatch run_experiment_w_test.sh $f True 3
+            fi
+        done            
+    done
+done
 
 sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/Conv5_FC3/subject_model-Conv5_FC3_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse False 3
 sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/Conv5_FC3/subject_model-Conv5_FC3_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue False 3

@@ -53,10 +53,10 @@ srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl
 
 CAPS_DIR="$HOME/MasterProject/DataAndExperiments/Data/CAPS"
 
-if [[ $1 =~ "NNs_Bayesian" ] ]; then
-    BAYESIAN = True 
+if [[ $1 =~ "NNs_Bayesian" ]]; then
+    BAYESIAN=True 
 else
-    BAYESIAN = False 
+    BAYESIAN=False 
 fi
  
 NBR_BAYESIAN_ITER=10
