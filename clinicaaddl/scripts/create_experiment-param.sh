@@ -16,7 +16,9 @@ for LR in 1e-4 1e-5
 do
 for MS in '1.5T-3T' '1.5T' '3T'
 do
-    for NETWORK in "ResNet18" "SEResNet18" "ResNet18Expanded" "SEResNet18Expanded" "Conv5_FC3"
+#     for NETWORK in "ResNet18" "SEResNet18" "ResNet18Expanded" "SEResNet18Expanded" "Conv5_FC3" "SEResNet50" "SEResNet50Expanded"
+    for NETWORK in "SEResNet18" "SEResNet18Expanded"
+
     do
         for LOSS in 'WeightedCrossEntropy' 'default'
         do

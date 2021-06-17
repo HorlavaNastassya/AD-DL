@@ -99,8 +99,10 @@ def annotate(axes, cols, rows):
                     fontsize=15, ha='right', va='center')
 
 def set_ylims_axes(axes):
-    min_ylim=min(ax.get_ylim()[0] for ax in axes)
-    max_ylim=max(ax.get_ylim()[1] for ax in axes)
+#     min_ylim=min(ax.get_ylim()[0] for ax in axes)
+#     max_ylim=max(ax.get_ylim()[1] for ax in axes)
+    min_ylim=-0.05
+    max_ylim=0.3
     for ax in axes:
         ax.set_ylim(bottom=min_ylim, top=max_ylim)
 

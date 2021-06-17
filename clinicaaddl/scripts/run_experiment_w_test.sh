@@ -76,8 +76,8 @@ fi
 
 if [[ $1 =~ "Experiments-1.5T-3T/" ]] ; then
 
-TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-1.5-3T/labels/test"
-POSTFIX="test_1.5-3T"
+TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-1.5T-3T/labels/test"
+POSTFIX="test_1.5T-3T"
 srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TSV_PATH $1 $POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint
 
 fi

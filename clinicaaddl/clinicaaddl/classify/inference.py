@@ -15,6 +15,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 
+
 def classify(caps_dir,
              tsv_path,
              model_path,
@@ -410,4 +411,5 @@ def inference_from_model_generic(caps_dir, tsv_path, model_path, model_options,
 
         mode_level_to_tsvs(output_dir, predictions_df, metrics, fold, selection, model_options.mode,
                            dataset=prefix)
+
 

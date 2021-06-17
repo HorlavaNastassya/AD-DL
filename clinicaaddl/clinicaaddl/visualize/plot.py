@@ -124,7 +124,7 @@ def plot_generic(
             folder_fold_name = fold_key
 
         if args.output_path:
-            saved_file_path = os.path.join(args.output_path, folder_fold_name, folder_name)
+            saved_file_path = os.path.join(args.output_path, folder_fold_name, params["model"],  folder_name)
             os.makedirs(saved_file_path, exist_ok=True)
             saved_file_path=os.path.join(saved_file_path, model_name + '.png')
         else:

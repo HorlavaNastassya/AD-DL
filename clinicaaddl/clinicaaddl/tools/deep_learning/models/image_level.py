@@ -202,15 +202,14 @@ class ResNet50(ResNet):
 
 class SEResNet18(ResNet):
     def __init__(self, n_classes=3, expanded=False):
-        super().__init__(SEBottleneck, [3, 4, 6, 3], num_classes=n_classes, num_channels=1, expanded=expanded)
+        super().__init__(SEBasicBlock, [2, 2, 2, 2], num_classes=n_classes, num_channels=1, expanded=expanded)
         self.avgpool = nn.AdaptiveAvgPool3d(1)
-
-
 
 class SEResNet50(ResNet):
     def __init__(self, n_classes=3, expanded=False):
-        super().__init__(SEBasicBlock, [2, 2, 2, 2], num_classes=n_classes, num_channels=1, expanded=expanded)
+        super().__init__(SEBottleneck, [3, 4, 6, 3], num_classes=n_classes, num_channels=1, expanded=expanded)
 
+        
 class ResNet18Expanded(ResNet18):
     def __init__(self, n_classes=3, expanded=True):
         super().__init__(n_classes, expanded)

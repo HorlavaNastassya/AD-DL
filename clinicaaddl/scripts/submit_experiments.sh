@@ -1,47 +1,51 @@
 #!/bin/bash
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/Conv5_FC3/subject_model-Conv5_FC3_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/Conv5_FC3/subject_model-Conv5_FC3_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/SEResNet18Expanded/subject_model-SEResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/ResNet18Expanded/subject_model-ResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/SEResNet18/subject_model-SEResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/ResNet18Expanded/subject_model-ResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/SEResNet18/subject_model-SEResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/ResNet18/subject_model-ResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/ResNet18/subject_model-ResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/Conv5_FC3/subject_model-Conv5_FC3_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/Conv5_FC3/subject_model-Conv5_FC3_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18Expanded/subject_model-SEResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18Expanded/subject_model-SEResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18Expanded/subject_model-ResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18Expanded/subject_model-ResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18/subject_model-SEResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18/subject_model-SEResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18/subject_model-ResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18/subject_model-ResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/SEResNet18Expanded/subject_model-SEResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_134522 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/Conv5_FC3/subject_model-Conv5_FC3_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_134433 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/Conv5_FC3/subject_model-Conv5_FC3_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_134429 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18Expanded/subject_model-SEResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_134420 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18Expanded/subject_model-SEResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_134417 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18Expanded/subject_model-ResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_134404 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18Expanded/subject_model-ResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_134407 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18/subject_model-SEResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_134351 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18/subject_model-SEResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_134355 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18/subject_model-ResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_134342 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18/subject_model-ResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_134339 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/SEResNet18Expanded/subject_model-SEResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_130201 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/SEResNet18/subject_model-SEResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_130136 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/SEResNet18/subject_model-SEResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_130133 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/ResNet18Expanded/subject_model-ResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_130147 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T/NNs_Bayesian/ResNet18/subject_model-ResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_130119 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/Conv5_FC3/subject_model-Conv5_FC3_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_130 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/Conv5_FC3/subject_model-Conv5_FC3_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_130106 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18Expanded/subject_model-SEResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_130056 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18Expanded/subject_model-SEResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_130053 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18Expanded/subject_model-ResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_130043 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18Expanded/subject_model-ResNet18Expanded_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_130039 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18/subject_model-SEResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_130029 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18/subject_model-SEResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_130025 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18/subject_model-ResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_130015 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/ResNet18/subject_model-ResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmTrue_20210528_130011 True 3
-sbatch run_experiment_w_test.sh /u/horlavanasta/MasterProject/DataAndExperiments/Experiments_3-fold/Experiments-1.5T-3T/NNs_Bayesian/SEResNet18/subject_model-SEResNet18_preprocessing-linear_task-AD_CN_norm-1_loss-default_augmFalse_20210528_130029 True 3
+echo "continue for 5 folds Bayesian NNs "
+for MS in '1.5T-3T' '1.5T' '3T' 
+do
+    for NETWORK in "SEResNet50" "SEResNet50Expanded"  "ResNet18" "ResNet18Expanded" "Conv5_FC3"
+    do
+        NN_FOLDER="NNs_Bayesian"
+        OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_5-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
+        for f in ${OUTPUT_DIR}/*; do
+            if [ -d "$f" ] &&  [[ $f =~ "subject_model" ]] && [ ! -f "${f}/status.txt" ] ; then
+                echo $f
+                sbatch run_experiment_w_test.sh $f True 5
+            fi
+        done            
+    done
+    
+done
+
+echo "start for 5 folds Bayesian NNs "
+
+for MS in '1.5T-3T' '1.5T' '3T' 
+do
+    for NETWORK in "SEResNet18" "SEResNet18Expanded"
+    do
+        NN_FOLDER="NNs_Bayesian"
+        OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_5-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
+        for f in ${OUTPUT_DIR}/*; do
+            if [ -d "$f" ] &&  [[ $f =~ "subject_model" ]] && [ ! -f "${f}/status.txt" ] ; then
+                echo $f
+                sbatch run_experiment_w_test.sh $f True 5
+            fi
+        done            
+    done
+    
+done
+
+echo "start for 5 folds NNs"
+for MS in '1.5T-3T' '1.5T' '3T' 
+do
+    for NETWORK in "ResNet18" "SEResNet18" "ResNet18Expanded" "SEResNet18Expanded" "Conv5_FC3" "SEResNet50" "SEResNet50Expanded"
+    do
+        NN_FOLDER="NNs"
+        OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_5-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
+        for f in ${OUTPUT_DIR}/*; do
+            if [ -d "$f" ] &&  [[ $f =~ "subject_model" ]] && [ ! -f "${f}/status.txt" ] ; then
+                echo $f
+                sbatch run_experiment_w_test.sh $f True 5
+            fi
+        done            
+    done
+done
