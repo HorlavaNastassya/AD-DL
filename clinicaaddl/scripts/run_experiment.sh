@@ -1,15 +1,15 @@
 #!/bin/bash
 #SBATCH --gres=gpu:v100:1
 #SBATCH --constraint="gpu"
-#SBATCH --time=23:59:00
+#SBATCH --time=23:20:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=20
 #SBATCH --mem=92500
 #SBATCH --mail-type=END
 #SBATCH --mail-user=g.nasta.work@gmail.com
-#SBATCH -o logs/HLR_%j.out
-#SBATCH -e logs/HLR_%j.err
+#SBATCH -o logs/HLR_%x_%j.out
+#SBATCH -e logs/HLR_%x_%j.err
 echo $1
 if [ -z "$2" ]
   then
@@ -28,7 +28,7 @@ BATCH=8
 # SPLIT=2
 if [ -z "$3" ]
   then
-    NUM_SPLITS=3
+    NUM_SPLITS=5
 else
   NUM_SPLITS=$3
 fi
@@ -49,5 +49,59 @@ fi
 # Run clinicaaddl
 srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py train \
   $1 --resume $FROM_CHECKPOINT $OPTIONS
-  
-  
+
+
+CAPS_DIR="$HOME/MasterProject/DataAndExperiments/Data/CAPS"
+
+if [[ $1 =~ "NNs_Bayesian" ]]; then
+    BAYESIAN=True 
+else
+    BAYESIAN=False 
+fi
+ 
+NBR_BAYESIAN_ITER=10
+
+if [[ $1 =~ "Experiments/" ]] ; then
+FOLD_FOLDER="Experiments"
+fi
+
+if [[ $1 =~ "Experiments_3-fold/" ]] ; then
+FOLD_FOLDER="Experiments_3-fold"
+fi
+
+if [[ $1 =~ "Experiments_5-fold/" ]] ; then
+FOLD_FOLDER="Experiments_5-fold"
+fi
+
+if [[ $1 =~ "Experiments-1.5T-3T/" ]] ; then
+
+TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-1.5T-3T/labels/test"
+POSTFIX="test_1.5T-3T"
+srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TSV_PATH $1 $POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint
+
+fi
+
+
+if [[ $1 =~ "Experiments-1.5T/" ]] ; then
+                
+TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-1.5T/labels/test"
+POSTFIX="test_1.5T"
+srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TSV_PATH $1 $POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint
+
+TEST_MS="3T"
+TEST_POSTFIX="test_${TEST_MS}"
+TEST_TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-${TEST_MS}/labels/"
+srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TEST_TSV_PATH $1 $TEST_POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint --baseline False
+fi
+
+if [[ $1 =~ "Experiments-3T/" ]] ; then
+TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-3T/labels/test"
+POSTFIX="test_3T"
+srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TSV_PATH $1 $POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint
+
+TEST_MS="1.5T"
+TEST_POSTFIX="test_${TEST_MS}"
+TEST_TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-${TEST_MS}/labels/"
+srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TEST_TSV_PATH $1 $TEST_POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint --baseline False
+
+fi

@@ -13,7 +13,7 @@ def save_checkpoint(state, accuracy_is_best, loss_is_best, checkpoint_dir, filen
 
     os.makedirs(checkpoint_dir, exist_ok=True)
 
-    torch.save(state, os.path.join(checkpoint_dir, filename))
+    torch.save(state, os.path.join(checkpoint_dir, filename), _use_new_zipfile_serialization=False)
     if accuracy_is_best:
         best_accuracy_path = os.path.join(checkpoint_dir, best_accuracy)
         if not os.path.exists(best_accuracy_path):

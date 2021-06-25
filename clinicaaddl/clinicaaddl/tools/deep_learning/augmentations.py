@@ -127,6 +127,7 @@ def get_augmentation_list(data_augmentation):
         #                  "CropPad": RandomCropPad(10),
         #                  "Smoothing": RandomSmoothing(),
         #                  "None": None ,
+        'RandomBlur': Augmentation("RandomBlur", {"std":(0.0, 0.3)}),
         'RandomNoise': Augmentation('RandomNoise', {'mean': (-0.03, 0.03), 'std': (0, 0.01)}),
         'RandomBiasField': Augmentation('RandomBiasField', {'coefficients': (0, 0.2), "order": 1}),
         'RandomBiasField2': Augmentation('RandomBiasField', {"coefficients": (0, 0.25), "order": 2}),

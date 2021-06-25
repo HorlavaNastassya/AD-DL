@@ -80,6 +80,7 @@ def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
     if catplot_type == "violinplot":
         arguments["split"] = True
         arguments["scale"] = "count"
+        arguments["cut"] = 0
 
     if catplot_type == "stripplot":
         arguments["dodge"] = True

@@ -16,7 +16,7 @@ module load anaconda/3/2020.02
 module load cuda/11.2
 module load pytorch/gpu-cuda-11.2/1.8.1
 
-BAYESIAN=True
+BAYESIAN=$3
 NBR_BAYESIAN_ITER=10
 
 MS=$1
@@ -31,12 +31,12 @@ else
     NN_FOLDER="NNs"
 fi
                 
-TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments_3-fold/Experiments-${MS}/labels/test"
-OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_3-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
+TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments_5-fold/Experiments-${MS}/labels/test"
+OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_5-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
 POSTFIX="test_${MS}"
                 
 for f in ${OUTPUT_DIR}/*; do
-    if [ -d "$f" ] &&  [[ $f =~ "subject_model" ]] &&  [ ! -f "${f}/status.txt" ]  ; then
+    if [ -d "$f" ] &&  [[ $f =~ "subject_model" ]] && [ -f "${f}/status.txt" ]  ; then
 # Will not run if no directories are available
         echo -e "$f"
         srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TSV_PATH $f $POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint
@@ -45,7 +45,7 @@ for f in ${OUTPUT_DIR}/*; do
         echo -e "$f"
         TEST_MS="3T"
         TEST_POSTFIX="test_${TEST_MS}"
-        TEST_TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments_3-fold/Experiments-${TEST_MS}/labels/"
+        TEST_TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments_5-fold/Experiments-${TEST_MS}/labels/"
         srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TEST_TSV_PATH $f $TEST_POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint --baseline False
         fi
             
@@ -53,9 +53,11 @@ for f in ${OUTPUT_DIR}/*; do
         echo -e "$f"
         TEST_MS="1.5T"
         TEST_POSTFIX="test_${TEST_MS}"
-        TEST_TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments_3-fold/Experiments-${TEST_MS}/labels/"
+        TEST_TSV_PATH="$HOME/MasterProject/DataAndExperiments/Experiments_5-fold/Experiments-${TEST_MS}/labels/"
         srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TEST_TSV_PATH $f $TEST_POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint --baseline False
         fi
+   
+        srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py bayesian $f stat
 
     fi
 done    

@@ -113,7 +113,7 @@ def train_single_cnn(params):
         #                                                            weight_decay=params.weight_decay)
         resume_fold = params.resume
         if params.resume:
-            if os.path.exists(fold_dir):
+            if os.path.exists(os.path.join(model_dir,'checkpoint.pth.tar')) and os.path.exists(os.path.join(model_dir,'optimizer.pth.tar')):
                 model, beginning_epoch = load_model(model, model_dir, params.gpu, 'checkpoint.pth.tar')
                 optimizer_path = os.path.join(model_dir, 'optimizer.pth.tar')
                 optimizer, optimizer_epoch = load_optimizer(optimizer_path, model, params.gpu)

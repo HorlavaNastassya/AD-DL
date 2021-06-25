@@ -1729,7 +1729,7 @@ def return_train_parent_parser(retrain=False):
     train_data_group.add_argument(
         "--data_augmentation", nargs="+", default=None if retrain else False,
         # choices=["None", "Noise", "Erasing", "CropPad", "Smoothing"],
-        choices=["None", "RandomNoise", "RandomBiasField", "RandomBiasField2", "RandomGamma",
+        choices=["None","RandomBlur", "RandomNoise", "RandomBiasField", "RandomBiasField2", "RandomGamma",
                  "RandomRotation", "RandomScaling", "RandomRotationAndScaling",
                  "RandomSpike", "RandomMotion", "RandomMotion2",
                  "RandomGhosting"],

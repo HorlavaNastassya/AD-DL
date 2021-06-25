@@ -61,23 +61,25 @@ fi
  
 NBR_BAYESIAN_ITER=10
 
-
-if [[ $1 =~ "Experiments_5-fold/" ]] ; then
-FOLD_FOLDER="Experiments_5-fold"
+if [[ $1 =~ "Experiments/" ]] ; then
+FOLD_FOLDER="Experiments"
 fi
 
 if [[ $1 =~ "Experiments_3-fold/" ]] ; then
 FOLD_FOLDER="Experiments_3-fold"
 fi
 
-if [[ $1 =~ "Experiments/" ]] ; then
-FOLD_FOLDER="Experiments"
+if [[ $1 =~ "Experiments_5-fold/" ]] ; then
+FOLD_FOLDER="Experiments_5-fold"
 fi
 
 if [[ $1 =~ "Experiments-1.5T-3T/" ]] ; then
 
+echo "test phase, bayesian: ${BAYESIAN}"
+
 TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-1.5T-3T/labels/test"
 POSTFIX="test_1.5T-3T"
+echo $TSV_PATH
 srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TSV_PATH $1 $POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint
 
 fi
@@ -87,22 +89,25 @@ if [[ $1 =~ "Experiments-1.5T/" ]] ; then
                 
 TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-1.5T/labels/test"
 POSTFIX="test_1.5T"
+echo $TSV_PATH
 srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TSV_PATH $1 $POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint
 
 TEST_MS="3T"
 TEST_POSTFIX="test_${TEST_MS}"
 TEST_TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-${TEST_MS}/labels/"
+echo $TEST_TSV_PATH
 srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TEST_TSV_PATH $1 $TEST_POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint --baseline False
 fi
 
 if [[ $1 =~ "Experiments-3T/" ]] ; then
 TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-3T/labels/test"
 POSTFIX="test_3T"
+echo $TSV_PATH
 srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TSV_PATH $1 $POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint
-
 TEST_MS="1.5T"
 TEST_POSTFIX="test_${TEST_MS}"
 TEST_TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-${TEST_MS}/labels/"
+echo $TEST_TSV_PATH
 srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TEST_TSV_PATH $1 $TEST_POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint --baseline False
 
 fi
