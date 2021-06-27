@@ -252,6 +252,7 @@ class MRIDatasetImage(MRIDataset):
         return img
     
     def __getitem__(self, idx):
+        import nibabel as nib
         participant, session, _, label = self._get_meta_data(idx)
 
         image_path = self._get_path(participant, session, "image")
