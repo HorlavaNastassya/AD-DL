@@ -92,6 +92,15 @@ class MRIDataset(Dataset):
                                    'deeplearning_prepare_data', '%s_based' % mode, 't1_extensive',
                                    participant + '_' + session
                                    + FILENAME_TYPE['skull_stripped'] + '.pt')
+            
+        elif self.preprocessing == "t1-none":
+            image_path=os.path.join(self.caps_directory,  participant, session, "anat",participant+ '_' + session
+                                   +'_T1w.nii.gz')
+            image_path = path.join(self.caps_directory, 'subjects', participant, session,
+                                   'deeplearning_prepare_data', '%s_based' % mode, 't1_extensive',
+                                   participant + '_' + session
+                                   + FILENAME_TYPE['skull_stripped'] + '.pt')
+            
         elif self.preprocessing == "t1-volume":
             image_path = path.join(self.caps_directory, 'subjects', participant, session,
                                    'deeplearning_prepare_data', '%s_based' % mode, 't1_volume',
@@ -125,26 +134,61 @@ class MRIDataset(Dataset):
             label = self.diagnosis_code['unlabeled']
 
         return participant, session, elem_idx, label
+    
+    def _resize_image(self, img, output_size=164):
+        import numpy as np
+        from scipy import ndimage
+        
+        max_dim=np.max(img.shape)
+        
+        current_depth = img.shape[-1]
+        current_width = img.shape[0]
+        current_height = img.shape[1]
 
+        z, y, x = (int((max_dim-current_width)//2), int((max_dim-current_height)//2), int((max_dim-current_depth)//2))
+        z2=z if z*2+current_width==max_dim else z+1
+        y2=y if y*2+current_height==max_dim else y+1
+        x2=x if x*2+current_depth==max_dim else x+1
+
+        pad_width = ((z, z2), (y, y2), (x, x2))
+        img = np.pad(img, pad_width=pad_width, mode='edge')
+
+        factor = output_size / max_dim
+
+        # Resize across z-axis
+        img = ndimage.zoom(img, (factor, factor, factor))
+
+        return img
+    
     def _get_full_image(self):
         from clinicaaddl.tools.data.utils import find_image_path as get_nii_path
         import nibabel as nib
 
         participant_id = self.df.loc[0, 'participant_id']
         session_id = self.df.loc[0, 'session_id']
-
-        try:
+        if self.preprocessing == "t1-none":
+            
             image_path = self._get_path(participant_id, session_id, "image")
-            image = torch.load(image_path)
-        except FileNotFoundError:
-            image_path = get_nii_path(
-                self.caps_directory,
-                participant_id,
-                session_id,
-                preprocessing=self.preprocessing)
-            image_nii = nib.load(image_path)
-            image_np = image_nii.get_fdata()
-            image = ToTensor()(image_np)
+            image_nii=nib.load(image_filepath)
+            img=np.array(nib_img.get_fdata())
+            img=self._resize_image(img)
+            img=torch.from_numpy(img).float()
+            image=torch.unsqueeze(img, 0)
+            
+                
+        else:
+            try:
+                image_path = self._get_path(participant_id, session_id, "image")
+                image = torch.load(image_path)
+            except FileNotFoundError:
+                image_path = get_nii_path(
+                    self.caps_directory,
+                    participant_id,
+                    session_id,
+                    preprocessing=self.preprocessing)
+                image_nii = nib.load(image_path)
+                image_np = image_nii.get_fdata()
+                image = ToTensor()(image_np)
 
         return image
 
@@ -190,7 +234,15 @@ class MRIDatasetImage(MRIDataset):
         participant, session, _, label = self._get_meta_data(idx)
 
         image_path = self._get_path(participant, session, "image")
-        image = torch.load(image_path)
+        
+        if self.preprocessing == "t1-none":
+            image_nii=nib.load(image_filepath)
+            img=np.array(nib_img.get_fdata())
+            img=self._resize_image(img)
+            img=torch.from_numpy(img).float()
+            image=torch.unsqueeze(img, 0)
+        else:
+            image = torch.load(image_path)
 
         if self.transformations:
             image = self.transformations(image)
@@ -202,6 +254,27 @@ class MRIDatasetImage(MRIDataset):
                   'image_path': image_path}
 
         return sample
+    
+    def _resize_image(self, img, output_size=164):
+        import numpy as np
+        from scipy import ndimage
+        max_dim=np.max(img.shape)
+        current_depth = img.shape[-1]
+        current_width = img.shape[0]
+        current_height = img.shape[1]
+
+        z, y, x = (int((max_dim-current_width)//2), int((max_dim-current_height)//2), int((max_dim-current_depth)//2))
+        z2=z if z*2+current_width==max_dim else z+1
+        y2=y if y*2+current_height==max_dim else y+1
+        x2=x if x*2+current_depth==max_dim else x+1
+
+        pad_width = ((z, z2), (y, y2), (x, x2))
+        img = np.pad(img, pad_width=pad_width, mode='edge')
+        factor = output_size / max_dim
+        # Resize across z-axis
+        img = ndimage.zoom(img, (factor, factor, factor))
+
+        return img
 
     def num_elem_per_image(self):
         return 1

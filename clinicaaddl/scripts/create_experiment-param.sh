@@ -11,12 +11,13 @@ module load pytorch/gpu-cuda-11.2/1.8.1
 EPOCHS=100
 BATCH=10
 BAYESIAN=False
-
-for LR in 1e-4
+for BAYESIAN in True False
+do
+for LR in 1e-3 1e-4
 do
 for MS in '1.5T-3T' '1.5T' '3T'
 do
-    for NETWORK in "ResNet18" "SEResNet18" "ResNet18Expanded" "SEResNet18Expanded" "Conv5_FC3"
+    for NETWORK in "ResNet50" "SEResNet50"
 
     do
         for LOSS in 'WeightedCrossEntropy' 'default'
@@ -57,8 +58,8 @@ do
                 OPTIONS=""
 
                 if [ $AUGMENTATION = True ]; then
-#                 OPTIONS="$OPTIONS --data_augmentation RandomNoise RandomBiasField RandomGamma RandomRotation"
-                OPTIONS="$OPTIONS --data_augmentation RandomBlur RandomNoise RandomBiasField RandomGamma"
+                OPTIONS="$OPTIONS --data_augmentation RandomNoise RandomBiasField RandomGamma RandomRotation"
+#                 OPTIONS="$OPTIONS --data_augmentation RandomBlur RandomNoise RandomBiasField RandomGamma"
 
                 fi
 
@@ -72,7 +73,7 @@ do
 
 #                 echo $TASK_NAME
 
-            NAME="subject_model-${NETWORK}_preprocessing-${PREPROCESSING}_task-${TASK_NAME}_norm-${NORMALIZATION}_loss-${LOSS}_augm${AUGMENTATION}-2"
+            NAME="subject_model-${NETWORK}_preprocessing-${PREPROCESSING}_task-${TASK_NAME}_norm-${NORMALIZATION}_loss-${LOSS}_augm${AUGMENTATION}"
                 # echo $NAME
 
                 # Run clinicaaddl
@@ -100,5 +101,6 @@ do
             done
         done
     done
+done
 done
 done
