@@ -258,7 +258,7 @@ class MRIDatasetImage(MRIDataset):
         image_path = self._get_path(participant, session, "image")
         
         if self.preprocessing == "t1-none":
-            image_nii=nib.load(image_filepath)
+            image_nii=nib.load(image_path)
             img=np.array(nib_img.get_fdata())
             img=self._resize_image(img)
             img=torch.from_numpy(img).float()
