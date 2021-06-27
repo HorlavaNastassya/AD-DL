@@ -96,10 +96,6 @@ class MRIDataset(Dataset):
         elif self.preprocessing == "t1-none":
             image_path=os.path.join(self.caps_directory,  participant, session, "anat",participant+ '_' + session
                                    +'_T1w.nii.gz')
-            image_path = path.join(self.caps_directory, 'subjects', participant, session,
-                                   'deeplearning_prepare_data', '%s_based' % mode, 't1_extensive',
-                                   participant + '_' + session
-                                   + FILENAME_TYPE['skull_stripped'] + '.pt')
             
         elif self.preprocessing == "t1-volume":
             image_path = path.join(self.caps_directory, 'subjects', participant, session,
