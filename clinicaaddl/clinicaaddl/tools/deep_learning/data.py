@@ -230,6 +230,27 @@ class MRIDatasetImage(MRIDataset):
                          augmentation_transformations=train_transformations, labels=labels,
                          transformations=all_transformations)
 
+    def _resize_image(self, img, output_size=164):
+        import numpy as np
+        from scipy import ndimage
+        max_dim=np.max(img.shape)
+        current_depth = img.shape[-1]
+        current_width = img.shape[0]
+        current_height = img.shape[1]
+
+        z, y, x = (int((max_dim-current_width)//2), int((max_dim-current_height)//2), int((max_dim-current_depth)//2))
+        z2=z if z*2+current_width==max_dim else z+1
+        y2=y if y*2+current_height==max_dim else y+1
+        x2=x if x*2+current_depth==max_dim else x+1
+
+        pad_width = ((z, z2), (y, y2), (x, x2))
+        img = np.pad(img, pad_width=pad_width, mode='edge')
+        factor = output_size / max_dim
+        # Resize across z-axis
+        img = ndimage.zoom(img, (factor, factor, factor))
+
+        return img
+    
     def __getitem__(self, idx):
         participant, session, _, label = self._get_meta_data(idx)
 
@@ -254,27 +275,6 @@ class MRIDatasetImage(MRIDataset):
                   'image_path': image_path}
 
         return sample
-    
-    def _resize_image(self, img, output_size=164):
-        import numpy as np
-        from scipy import ndimage
-        max_dim=np.max(img.shape)
-        current_depth = img.shape[-1]
-        current_width = img.shape[0]
-        current_height = img.shape[1]
-
-        z, y, x = (int((max_dim-current_width)//2), int((max_dim-current_height)//2), int((max_dim-current_depth)//2))
-        z2=z if z*2+current_width==max_dim else z+1
-        y2=y if y*2+current_height==max_dim else y+1
-        x2=x if x*2+current_depth==max_dim else x+1
-
-        pad_width = ((z, z2), (y, y2), (x, x2))
-        img = np.pad(img, pad_width=pad_width, mode='edge')
-        factor = output_size / max_dim
-        # Resize across z-axis
-        img = ndimage.zoom(img, (factor, factor, factor))
-
-        return img
 
     def num_elem_per_image(self):
         return 1

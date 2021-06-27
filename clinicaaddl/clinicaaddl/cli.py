@@ -339,7 +339,7 @@ def parse_command_line():
     generate_rs_parent_parser.add_argument(
         'preprocessing',
         type=str,
-        choices=['t1-linear', 't1-extensive'],
+        choices=['t1-linear', 't1-extensive', 't1-none'],
         help="Preprocessing used to generate synthetic data."
     )
     generate_rs_parent_parser.add_argument(
@@ -1663,7 +1663,7 @@ def return_train_parent_parser(retrain=False):
         train_pos_group.add_argument(
             'preprocessing',
             help='Defines the type of preprocessing of CAPS data.',
-            choices=['t1-linear', 't1-extensive'], type=str)
+            choices=['t1-linear', 't1-extensive', "t1-none"], type=str)
         train_pos_group.add_argument(
             'tsv_path',
             help='TSV path with subjects/sessions to process.',
