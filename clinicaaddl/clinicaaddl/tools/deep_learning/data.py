@@ -166,11 +166,10 @@ class MRIDataset(Dataset):
             
             image_path = self._get_path(participant_id, session_id, "image")
             image_nii=nib.load(image_filepath)
-            img=np.array(nib_img.get_fdata())
+            img=np.array(image_nii.get_fdata())
             img=self._resize_image(img)
             img=torch.from_numpy(img).float()
             image=torch.unsqueeze(img, 0)
-            
                 
         else:
             try:
