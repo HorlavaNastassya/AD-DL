@@ -184,6 +184,8 @@ def visualize_func(args):
     else:
         MS = [x.replace("Experiments-", "") for x in os.path.normpath((args.model_path)).split(os.path.sep) if
               "Experiments-" in x][0]
+    if MS=="1.5T-3T":
+        args.separate_by_MS=True
 
     args.MS_list=MS_list_dict[MS] if args.MS_list is None else args.MS_list
     plot_generic(args, training_MS=MS)
@@ -1193,10 +1195,12 @@ def parse_command_line():
         choices=["results", "uncertainty_distribution", "history"])
 
     visualize_parser.add_argument(
-        '--average_fold',
-        help='''If True, all resulting metrics will be calculated as mean among folds''',
-        type=str2bool,
-        default=True,
+        '--aggregation mode',
+        help='''Type of aggregation mode: If "average", all resulting metrics will be calculated as mean among folds
+        \n if "separate", then results for all folds will be shown separately, 
+         \n if "all", then results for all folds will be shown together in 1 plot, ''',
+        type=str,choices=["average", "separate", "all"],
+        default="all",
         )
 
     visualize_parser.add_argument(
@@ -1214,6 +1218,14 @@ def parse_command_line():
     )
 
     visualize_parser.add_argument(
+        "--selection_metrics",
+        help='''From which model states show the results (best loss, best accurace, ...). ''',
+        nargs='+',
+        default=["best_loss", "best_accuracy", "last_checkpoint"],
+        choices=["best_loss", "best_accuracy", "last_checkpoint"]
+    )
+
+    visualize_parser.add_argument(
         '--MS',
         help='''Magnet strength of the scans on witch network was trained ''',
         type=str,
@@ -1227,19 +1239,12 @@ def parse_command_line():
         default=None,
         choices=["1.5T", "3T", "1.5T-3T"])
 
-
     visualize_parser.add_argument(
         '--uncertainty_metric',
         help='Uncertainty metric',
         type=str,
         default="entropy",
         choices=["total_variance", "entropy", "NLL"])
-
-    visualize_parser.add_argument(
-        '--get_test_from_bayesian',
-        help='If True, will recalculate true/false predictions and metrics form beyesian predictions',
-        type=str2bool,
-        default=False)
 
     visualize_parser.add_argument(
         '--ba_inference_mode',
@@ -1255,77 +1260,7 @@ def parse_command_line():
         default='violinplot',
         choices=["stripplot", "violinplot", "histogram"])
 
-    # visualize_subparser = visualize_parser.add_subparsers(
-    #     title='''Implemented visualization types ''',
-    #     description='''What type of input do you want to use?
-    #                     (results, uncertainty_distribution,history,.''',
-    #     dest='data_types',
-    #     help='''****** Data types proposed by clinicaaddl ******''')
-    #
-    # visualize_subparser.required = True
-    #
-    # barplots_loss_parser = visualize_subparser.add_parser("barplots_loss",
-    #                                                       help="Plotting barplots of results with learning curves")
-    # barplots_loss_parser.add_argument(
-    #     '--save_best',
-    #     help='Save info about a model with best params in a .json file',
-    #     type=str2bool,
-    #     default=False)
-    #
-    # barplots_loss_parser.add_argument(
-    #     '--path_to_best',
-    #     help='Path to a file, where info about a model with best params would be saved',
-    #     type=str,
-    #     default=None)
-    #
-    # uncertainty_dist_parser = visualize_subparser.add_parser("uncertainty_distribution",
-    #                                                          help="Plotting distribution of uncertainty metric (optionally: together with results")
-    # uncertainty_dist_parser.add_argument(
-    #     '--uncertainty_metric',
-    #     help='Uncertainty metric',
-    #     type=str,
-    #     default="entropy",
-    #     choices=["total_variance", "entropy", "NLL"])
-    #
-    # uncertainty_dist_parser.add_argument(
-    #     '--separate_by_labels',
-    #     help='Indicates whether to plot distribution separately for different labels',
-    #     type=str2bool,
-    #     default=True)
-    #
-    # uncertainty_dist_parser.add_argument(
-    #     '--include_results',
-    #     help='Indicates whether to plot results with histograms as well',
-    #     type=str2bool,
-    #     default=True)
-    #
-    # uncertainty_catplop_parser = visualize_subparser.add_parser("uncertainty_catplot",
-    #                                                          help="Plotting distribution of uncertainty metric (optionally: together with results")
-    # uncertainty_catplop_parser.add_argument(
-    #     '--uncertainty_metric',
-    #     help='Uncertainty metric',
-    #     type=str,
-    #     default="entropy",
-    #     choices=["total_variance", "entropy", "NLL"])
-    #
-    # uncertainty_catplop_parser.add_argument(
-    #     '--inference_mode',
-    #     help='Indicates whether to plot distribution separately for different labels',
-    #     type=str,
-    #     default='from_mode')
-    #
-    # uncertainty_catplop_parser.add_argument(
-    #     '--include_results',
-    #     help='Indicates whether to plot results with catplot as well',
-    #     type=str2bool,
-    #     default=True)
-    #
-    # uncertainty_catplop_parser.add_argument(
-    #     '--catplot_type',
-    #     help='Indicates which type of catplot to plot: stripplot,violinplot, swarmplot ',
-    #     type=str,
-    #     default='stripplot',
-    # choices=["stripplot","violinplot" ])
+
 
     visualize_parser.set_defaults(func=visualize_func)
 

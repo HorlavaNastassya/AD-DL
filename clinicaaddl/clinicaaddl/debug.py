@@ -12,7 +12,7 @@ def get_args(model_path, MS_list, data_types):
     parser.add_argument("--data_types", nargs='+', default=data_types)
     # parser.add_argument("--MS_list", nargs='+', default=MS_list)
     # parser.add_argument("--metrics",default=None)
-    parser.add_argument("--average_fold", type=str2bool, default=True)
+    parser.add_argument("--aggregation_type", type=str, default="all")
     parser.add_argument("--history_modes", nargs='+', default=["loss", "balanced_accuracy"])
 
 
@@ -28,27 +28,27 @@ if __name__ == "__main__":
     import os
     import json
     from visualize.plot import plot_generic
-    from visualize.data_utils import  get_data_generic
+    from visualize.data_utils import get_data_generic
 
     folders = []
     # MS_main_list = ['1.5T', '3T', "1.5T-3T"]
-    MS_main_list = ['3T']
+    MS_main_list = ["1.5T-3T"]
 
     MS_list_dict = {'1.5T':['1.5T', '3T'], "3T": ['3T', '1.5T'], "1.5T-3T": ["1.5T-3T"]}
     # home_folder='/u/horlavanasta/MasterProject/'
     home_folder='/home/nastya/Documents/MasterProject/'
     data_types=["history", "uncertainty_distribution", "results"]
-    data_types=["uncertainty_distribution", "results", "history"]
+    # data_types=["results", "history"]
 
     isBayesian=True
 
     for MS in MS_main_list:
         print("____________________________________________________________________________________________")
-        model_types = ["Conv5_FC3"]
+        model_types = ["ResNet18"]
         MS_list = MS_list_dict[MS]
 
-        results_folder_general =os.path.join(home_folder, 'results/', "Experiments_Bayesian" if isBayesian else "Experiments", 'Experiments-' + MS)
-        model_dir_general = os.path.join(home_folder,"DataAndExperiments/Experiments_3-fold/Experiments-" + MS, "NNs_Bayesian" if isBayesian else "NNs")
+        # results_folder_general =os.path.join(home_folder, 'results/', "Experiments_Bayesian" if isBayesian else "Experiments", 'Experiments-' + MS)
+        model_dir_general = os.path.join(home_folder,"DataAndExperiments/Experiments_5-fold/Experiments-" + MS, "NNs_Bayesian" if isBayesian else "NNs")
 
         for network in model_types:
             model_dir = os.path.join(model_dir_general, network)
@@ -62,8 +62,13 @@ if __name__ == "__main__":
                 args.ba_inference_mode="mode"
                 args.MS_list=MS_list
                 args.output_path=None
+                args.bayesian=isBayesian
+                args.merged_file=os.path.join(home_folder, "DataAndExperiments/Data/DataStat/merge.tsv")
                 args.result_metrics=["accuracy","sensitivity", "precision", "f1-score"]
                 args.uncertainty_metric="total_variance"
                 args.catplot_type = "violinplot"
+                args.selection_metrics=None
+                args.separate_by_MS=True
                 plot_generic(args, MS)
+                # data=get_data_generic(args, MS)
 

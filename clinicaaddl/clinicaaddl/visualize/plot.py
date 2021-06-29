@@ -27,17 +27,22 @@ def plot_history(args, data, fig, row, figshape):
 
     for col, history_mode in enumerate(args.history_modes):
         ax = plt.subplot2grid(shape=figshape, loc=(row, col), fig=fig)
-        plot_history_ax(ax, data, mode=history_mode)
+        plot_history_ax(ax, data, mode=history_mode, aggregation_type=args.aggregation_type)
 
 
 
 def plot_results(args, data, fig, row, figshape):
-    from .plot_utils import plot_results_ax
+    from .plot_utils import plot_results_ax, plot_results_agg_ax
 
     for col, selection_mode in enumerate(list(data.keys())):
         ax = plt.subplot2grid(shape=figshape, loc=(row, col), fig=fig)
-        plot_results_ax(ax, data[selection_mode], args.result_metrics)
+        if args.aggregation_type is not "all":
+            plot_results_ax(ax, data[selection_mode], args.result_metrics)
+        else:
+            plot_results_agg_ax(ax, data[selection_mode], args.result_metrics)
+
         ax.set_title(selection_mode)
+
 
 
 
@@ -76,7 +81,7 @@ def plot_combined_plots(args, model_params, saved_file_path, data=None):
     plt.suptitle(str_suptitle)
 
     # plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.1, hspace=0.1)
-    plt.subplots_adjust( left=0.05, right=0.95, top=0.95, bottom=0.05,)
+    plt.subplots_adjust( left=0.05, right=0.95, top=0.95, bottom=0.05,hspace=0.3)
 
     if saved_file_path is not None:
         plt.savefig(saved_file_path)
@@ -118,7 +123,7 @@ def plot_generic(
 
     for fold_key in data.keys():
 
-        if not args.average_fold:
+        if args.aggregation_type=="separate":
             folder_fold_name = os.path.join("separate_folds", "fold-%s"%fold_key)
         else:
             folder_fold_name = fold_key
