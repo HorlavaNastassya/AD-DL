@@ -1195,7 +1195,7 @@ def parse_command_line():
         choices=["results", "uncertainty_distribution", "history"])
 
     visualize_parser.add_argument(
-        '--aggregation mode',
+        '--aggregation_type',
         help='''Type of aggregation mode: If "average", all resulting metrics will be calculated as mean among folds
         \n if "separate", then results for all folds will be shown separately, 
          \n if "all", then results for all folds will be shown together in 1 plot, ''',
