@@ -95,7 +95,7 @@ def check_and_clean(d):
     import os
     if os.path.exists(d):
         shutil.rmtree(d)
-    os.makedirs(d)
+    os.makedirs(d, exist_ok=True)
 
 
 def check_and_create(d):
