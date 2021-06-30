@@ -186,6 +186,8 @@ def visualize_func(args):
               "Experiments-" in x][0]
     if MS=="1.5T-3T":
         args.separate_by_MS=True
+    else:
+        args.separate_by_MS=False
 
     args.MS_list=MS_list_dict[MS] if args.MS_list is None else args.MS_list
     plot_generic(args, training_MS=MS)
@@ -1193,6 +1195,11 @@ def parse_command_line():
                                 (results, uncertainty_distribution,history,.''',
         default="results",
         choices=["results", "uncertainty_distribution", "history"])
+    
+    visualise_pos_group.add_argument(
+        '--merged_file',
+        help='''Path to the merged file for 1.5T-3T seperation by MS''', type=str, 
+        default=None)
 
     visualize_parser.add_argument(
         '--aggregation_type',
@@ -1221,8 +1228,8 @@ def parse_command_line():
         "--selection_metrics",
         help='''From which model states show the results (best loss, best accurace, ...). ''',
         nargs='+',
-        default=["best_loss", "best_accuracy", "last_checkpoint"],
-        choices=["best_loss", "best_accuracy", "last_checkpoint"]
+        default=None,
+        choices=["best_loss", "best_balanced_accuracy", "last_checkpoint"]
     )
 
     visualize_parser.add_argument(

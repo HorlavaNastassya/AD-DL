@@ -39,10 +39,13 @@ def get_results(args, aggregation_type="average"):
 
     for fold_dir in currentDirectory.glob(currentPattern):
         fold = int(str(fold_dir).split("-")[-1])
-
+        cnn_classification_dir = os.path.join(args.model_path, 'fold-%i' % fold, 'cnn_classification')
         if args.selection_metrics is None:
-            cnn_classification_dir = os.path.join(args.model_path, 'fold-%i' % fold, 'cnn_classification')
-            selection_metrics=[os.path.basename(os.path.normpath(f.path)) for f in os.scandir(cnn_classification_dir) if os.path.basename(os.path.normpath(f.path)) in possible_selection_metrics ]
+            selection_metrics = []
+            for f in os.scandir(cnn_classification_dir):
+                metric=os.path.basename(os.path.normpath(f.path))
+                if metric in possible_selection_metrics:
+                    selection_metrics.append(metric)
         else:
             selection_metrics=args.selection_metrics
 
@@ -132,10 +135,14 @@ def get_uncertainty_distribution(args, aggregation_type="average"):
     stat_dict = {}
     for fold_dir in currentDirectory.glob(currentPattern):
         fold = int(str(fold_dir).split("-")[-1])
+        cnn_classification_dir = os.path.join(args.model_path, 'fold-%i' % fold, 'cnn_classification')
 
         if args.selection_metrics is None:
-            cnn_classification_dir = os.path.join(args.model_path, 'fold-%i' % fold, 'cnn_classification')
-            selection_metrics = [os.path.basename(os.path.normpath(f.path)) for f in os.scandir(cnn_classification_dir)  if os.path.basename(os.path.normpath(f.path)) in possible_selection_metrics]
+            selection_metrics = []
+            for f in os.scandir(cnn_classification_dir):
+                metric=os.path.basename(os.path.normpath(f.path))
+                if metric in possible_selection_metrics:
+                    selection_metrics.append(metric)
         else:
             selection_metrics = args.selection_metrics
 
