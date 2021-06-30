@@ -16,6 +16,68 @@ def get_test_prediction(test_diagnosis_df, merged_df):
         res_dict["test_%sT"%str(key)]=test_diagnosis_df[key]
     return res_dict
 
+def load_test_and_separate(results_dict, args, cnn_classification_dir, selection_metric, mode,  fold, merged_df=None, stat_dict=None):
+    import pandas as pd
+
+    if args.bayesian:
+        for test_mode, values_df in stat_dict[fold][selection_metric].groupby("mode"):
+            if "test" in test_mode:
+                prediction_column = "predicted_label_from_%s" % args.ba_inference_mode
+                test_diagnosis_eval = evaluate_prediction(values_df[["true_label"]].values.astype(int),
+                                                          values_df[[prediction_column]].values.astype(int))
+                test_diagnosis_df = pd.DataFrame(test_diagnosis_eval, index=[0])
+                test_diagnosis_df = test_diagnosis_df.assign(fold=fold,
+                                                             mode=test_mode)
+
+                results_dict[selection_metric] = pd.concat(
+                    [results_dict[selection_metric], test_diagnosis_df],
+                    axis=0)
+    else:
+        test_diagnosis_path = os.path.join(cnn_classification_dir, selection_metric,
+                                           '%s_image_level_prediction.tsv' % (mode))
+        test_diagnosis_df = pd.read_csv(test_diagnosis_path, sep='\t')
+        prediction_column = "predicted_label"
+
+        test_diagnosis_dict = get_test_prediction(test_diagnosis_df, merged_df)
+        for test_mode in test_diagnosis_dict:
+            test_diagnosis_eval = evaluate_prediction(test_diagnosis_dict[test_mode][["true_label"]].values.astype(int),
+                                                      test_diagnosis_dict[test_mode][[prediction_column]].values.astype(int))
+            test_diagnosis_df = pd.DataFrame(test_diagnosis_eval, index=[0])
+            test_diagnosis_df = test_diagnosis_df.assign(fold=fold,
+                                                         mode=test_mode)
+            results_dict[selection_metric] = pd.concat(
+                [results_dict[selection_metric], test_diagnosis_df],
+                axis=0)
+    return results_dict
+
+def load_mode_results(results_dict, args, cnn_classification_dir, selection_metric, mode,  fold, load_from_ba_predictions=False,stat_dict=None):
+    import pandas as pd
+    if args.bayesian and load_from_ba_predictions:
+        values_df = stat_dict[fold][selection_metric].groupby("mode").get_group(mode)
+        prediction_column = "predicted_label_from_%s" % args.ba_inference_mode
+        test_diagnosis_eval = evaluate_prediction(values_df[["true_label"]].values.astype(int),
+                                                  values_df[[prediction_column]].values.astype(int))
+        test_diagnosis_df = pd.DataFrame(test_diagnosis_eval, index=[0])
+        test_diagnosis_df = test_diagnosis_df.assign(fold=fold,
+                                                     mode=mode)
+
+        results_dict[selection_metric] = pd.concat(
+            [results_dict[selection_metric], test_diagnosis_df],
+            axis=0)
+    else:
+        test_diagnosis_path = os.path.join(cnn_classification_dir, selection_metric,
+                                           '%s_image_level_metrics.tsv' % (mode))
+        if os.path.exists(test_diagnosis_path):
+            test_diagnosis_df = pd.read_csv(test_diagnosis_path, sep='\t')
+            test_diagnosis_df = test_diagnosis_df.assign(fold=fold,
+                                                         mode=mode)
+            test_diagnosis_df = test_diagnosis_df.drop(["total_loss", "image_id", ], axis=1)
+
+            results_dict[selection_metric] = pd.concat([results_dict[selection_metric], test_diagnosis_df],
+                                                       axis=0)
+    return results_dict
+
+
 def get_results(args, aggregation_type="average"):
     # aggregation_type=[average, separate, together]
     import pandas as pd
@@ -23,14 +85,16 @@ def get_results(args, aggregation_type="average"):
     import pathlib
     import numpy as np
 
-    
-
+    merged_df = None
+    stat_dict = None
     if args.bayesian:
         stat_dict = get_uncertainty_distribution(args, aggregation_type="separate")
     else:
         if args.separate_by_MS:
             merged_df = pd.read_csv(args.merged_file, sep="\t")
             merged_df=merged_df[["participant_id", "T1w_mri_field"]]
+
+
 
 
     results_dict = {}
@@ -58,49 +122,15 @@ def get_results(args, aggregation_type="average"):
 
             for mode in modes:
                 if "test" in mode:
-                    if args.separate_by_MS and not args.bayesian:
-                        test_diagnosis_path = os.path.join(cnn_classification_dir, selection_metric,
-                                                           '%s_image_level_prediction.tsv' % (mode))
-                        test_diagnosis_df = pd.read_csv(test_diagnosis_path, sep='\t')
-                        prediction_column="predicted_label"
-
-                        test_diagnosis_dict = get_test_prediction(test_diagnosis_df, merged_df)
-                        for key in test_diagnosis_dict:
-                            test_diagnosis_eval = evaluate_prediction(test_diagnosis_dict[key][["true_label"]].values.astype(int),
-                                                                      test_diagnosis_dict[key][[prediction_column]].values.astype(int))
-                            test_diagnosis_df = pd.DataFrame(test_diagnosis_eval, index=[0])
-                            test_diagnosis_df = test_diagnosis_df.assign(fold=fold,
-                                                                         mode=key)
-                            results_dict[selection_metric] = pd.concat(
-                                [results_dict[selection_metric], test_diagnosis_df],
-                                axis=0)
+                    if args.separate_by_MS:
+                        results_dict=load_test_and_separate(results_dict, args, cnn_classification_dir, selection_metric, mode,
+                                               fold, merged_df, stat_dict=stat_dict)
                     else:
-                        if args.bayesian:
-                            for test_mode, values_df in stat_dict[fold][selection_metric].groupby("mode"):
-                                if "test" in test_mode:
-
-                                    prediction_column = "predicted_label_from_%s" % args.ba_inference_mode
-                                    test_diagnosis_eval = evaluate_prediction(values_df[["true_label"]].values.astype(int),
-                                                                              values_df[[prediction_column]].values.astype(int))
-                                    test_diagnosis_df = pd.DataFrame(test_diagnosis_eval, index=[0])
-                                    test_diagnosis_df = test_diagnosis_df.assign(fold=fold,
-                                                                                 mode=test_mode)
-
-                                    results_dict[selection_metric] = pd.concat(
-                                                [results_dict[selection_metric], test_diagnosis_df],
-                                                axis=0)
+                        results_dict=load_mode_results(results_dict, args, cnn_classification_dir, selection_metric, mode,  fold, load_from_ba_predictions=True, stat_dict=stat_dict)
 
                 else:
-                    test_diagnosis_path = os.path.join(cnn_classification_dir, selection_metric,
-                                                       '%s_image_level_metrics.tsv' % (mode))
-                    if os.path.exists(test_diagnosis_path):
-                        test_diagnosis_df = pd.read_csv(test_diagnosis_path, sep='\t')
-                        test_diagnosis_df = test_diagnosis_df.assign(fold=fold,
-                                                                 mode=mode)
-                        test_diagnosis_df=test_diagnosis_df.drop(["total_loss", "image_id",], axis=1)
-
-                        results_dict[selection_metric] = pd.concat([results_dict[selection_metric], test_diagnosis_df],
-                                                           axis=0)
+                    results_dict=load_mode_results(results_dict, args, cnn_classification_dir, selection_metric, mode, fold,
+                                      load_from_ba_predictions=False, stat_dict=None)
 
     resulting_metrics_dict = {}
     if aggregation_type=="average":
