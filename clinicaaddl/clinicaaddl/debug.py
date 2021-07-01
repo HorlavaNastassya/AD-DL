@@ -39,8 +39,8 @@ if __name__ == "__main__":
     # home_folder='/u/horlavanasta/MasterProject/'
     home_folder='/home/nastya/Documents/MasterProject/'
     from classify.bayesian_utils import bayesian_predictions
-    # data_types=["history", "uncertainty_distribution", "results"]
-    data_types=["results", "history"]
+    data_types=["history", "uncertainty_distribution", "results"]
+    # data_types=["results", "history"]
 
     isBayesian=True
 
@@ -58,17 +58,17 @@ if __name__ == "__main__":
             modelPatter = "subject_model*"
             folders = [f for f in pathlib.Path(model_dir).glob(modelPatter)]
 
-            models_list=[]
+            models_list=''
             for f in folders[:]:
                 args=get_args(f, MS_list, data_types)
-                models_list.append(f)
-                prefixes = ["test_" + magnet_strength for magnet_strength in MS_list]
-                bayesian_predictions(model_path=f, prefixes=prefixes, function="stat")
-
+                models_list+="%s;"%f
+                # prefixes = ["test_" + magnet_strength for magnet_strength in MS_list]
+                # bayesian_predictions(model_path=f, prefixes=prefixes, function="stat")
                 # plot_generic(args, MS)
                 # data=get_data_generic(args, MS)
+
             args.ba_inference_mode = "mean"
-            args.aggregation_type="all"
+            args.aggregation_type="separate"
             args.MS_list = MS_list
             args.output_path = None
             args.bayesian = isBayesian
@@ -76,7 +76,8 @@ if __name__ == "__main__":
             args.result_metrics = ["accuracy", "sensitivity", "precision", "f1-score"]
             args.uncertainty_metric = "total_variance"
             args.catplot_type = "violinplot"
-            args.selection_metrics = None
             args.separate_by_MS = True
-            args.selection_metrics="best_loss"
+            args.selection_metrics=["best_loss"]
+            args.hinder_titles=True
+            models_list = models_list[:-1].split(";")
             plot_networks_generic(args, MS, models_list)

@@ -5,7 +5,6 @@ def get_rows_and_cols(data):
     rows_matrix = {}
     cols_matrix = {}
     for data_type in data.keys():
-        cols_matrix[data_type] = [selection_metric.replace("_", " ") for selection_metric in data[data_type].keys()]
         if data_type == "history":
             cols_matrix[data_type] = ["loss", "balanced_accuracy"]
         else:

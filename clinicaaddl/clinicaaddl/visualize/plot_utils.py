@@ -45,7 +45,9 @@ def plot_results_ax(ax, results, columns):
         def _show_on_single_plot(ax, factor=0.025):
             for p in ax.patches:
                 _x = p.get_x() + p.get_width() / 2
-                _y = p.get_y() + p.get_height() +ax.get_ylim()[-1]*factor
+                # _y = p.get_y() + p.get_height() +ax.get_ylim()[-1]*factor
+                _y = p.get_y() + ax.get_ylim()[-1] * factor
+
                 value = '{:.2f}'.format(p.get_height())
                 ax.text(_x, _y, value, ha="center")
 
@@ -61,10 +63,16 @@ def plot_results_ax(ax, results, columns):
     results=reshape_results(results, columns)
 
     # sns.barplot(data=results,hue="metric", x="mode", y="value", ax=ax, palette=sns.color_palette("Paired"), linewidth=1.5)
-    sns.barplot(data=results,hue="metric", x="mode", y="value", ax=ax, palette="Paired", linewidth=1.5)
+    sns.barplot(data=results,hue="metric", x="mode", y="value", ax=ax, palette="Paired", edgecolor="gray",  alpha=.95, linewidth=1.5)
 
     ax.set_ylim(bottom=-0.001, top=1.1)
     show_values_on_bars(ax)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[len(columns):], labels[len(columns):],
+              bbox_to_anchor=(0.5, -0.1),
+              loc='upper center',
+              ncol=3
+              )
 
 
 def plot_results_agg_ax(ax, results, columns):
@@ -95,6 +103,7 @@ def plot_results_agg_ax(ax, results, columns):
                 _show_on_single_plot(ax)
         else:
             _show_on_single_plot(axs)
+
     import seaborn as sns
     import pandas as pd
 
@@ -102,12 +111,8 @@ def plot_results_agg_ax(ax, results, columns):
     sns.swarmplot(data=results,hue="metric", x="mode", y="value", ax=ax, palette=sns.color_palette("Paired"),edgecolor="black", alpha=1., linewidth=1.0, dodge=True)
     results_avg=results.groupby(["mode", "metric"], as_index=False, sort=False).agg(np.mean)
     sns.barplot(data=results_avg,hue="metric", x="mode", y="value", ax=ax, palette=sns.color_palette("Paired"),edgecolor="gray",  alpha=.95, linewidth=1.5)
-
     show_values_on_bars(ax)
-
-    # sns.boxplot(data=results,hue="metric", x="mode", y="value", ax=ax, palette="Paired", linewidth=1.5)
     ax.set_ylim(bottom=-0.001, top=1.1)
-
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[len(columns):], labels[len(columns):],
                   bbox_to_anchor=(0.5, -0.1),
