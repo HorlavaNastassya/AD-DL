@@ -10,23 +10,23 @@ module load pytorch/gpu-cuda-11.2/1.8.1
 
 EPOCHS=100
 BATCH=10
-BAYESIAN=False
+
 for BAYESIAN in True False
 do
 for LR in 1e-3 1e-4
 do
 for MS in '1.5T-3T' '1.5T' '3T'
 do
-    for NETWORK in "ResNet50" "SEResNet50"
+    for NETWORK in "ResNet18" "ResNet18Expanded" "SEResNet18" "SEResNet18Expanded" 
 
     do
         for LOSS in 'WeightedCrossEntropy' 'default'
         do
-            for AUGMENTATION in True
+            for AUGMENTATION in True False
             do
 #                 echo -e "==========================================================================================================\n"
                 # Input arguments to clinicaaddl
-                CAPS_DIR="$HOME/MasterProject/DataAndExperiments/Data/CAPS"
+                CAPS_DIR="$HOME/MasterProject/DataAndExperiments/Data/BIDS"
                 if [ $BAYESIAN = True ]; then
                 NN_FOLDER="NNs_Bayesian"
                 else
@@ -37,7 +37,7 @@ do
                 OUTPUT_DIR="$HOME/MasterProject//DataAndExperiments/Experiments_5-fold/Experiments-${MS}/${NN_FOLDER}/${NETWORK}/"
 
                 # Dataset Management
-                PREPROCESSING='linear'
+                PREPROCESSING='none'
                 TASK='AD CN'
                 BASELINE=True
 

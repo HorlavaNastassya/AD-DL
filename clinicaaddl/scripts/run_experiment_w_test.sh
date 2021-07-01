@@ -51,7 +51,12 @@ srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl
   $1 --resume $FROM_CHECKPOINT $OPTIONS
 
 
-CAPS_DIR="$HOME/MasterProject/DataAndExperiments/Data/CAPS"
+if [[ $1 =~ "preprocessing-none" ]]; then
+    CAPS_DIR="$HOME/MasterProject/DataAndExperiments/Data/BIDS"
+else
+    CAPS_DIR="$HOME/MasterProject/DataAndExperiments/Data/CAPS"
+fi 
+
 
 if [[ $1 =~ "NNs_Bayesian" ]]; then
     BAYESIAN=True 
@@ -112,5 +117,9 @@ srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl
 
 fi
 
+
+if [ $BAYESIAN = True ]; then
+    srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py bayesian $1 stat
+fi
 
 

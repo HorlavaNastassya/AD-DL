@@ -50,8 +50,11 @@ fi
 srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py train \
   $1 --resume $FROM_CHECKPOINT $OPTIONS
 
-
-CAPS_DIR="$HOME/MasterProject/DataAndExperiments/Data/CAPS"
+if [[ $1 =~ "preprocessing-none" ]]; then
+    CAPS_DIR="$HOME/MasterProject/DataAndExperiments/Data/BIDS"
+else
+    CAPS_DIR="$HOME/MasterProject/DataAndExperiments/Data/CAPS"
+fi  
 
 if [[ $1 =~ "NNs_Bayesian" ]]; then
     BAYESIAN=True 
@@ -104,4 +107,8 @@ TEST_POSTFIX="test_${TEST_MS}"
 TEST_TSV_PATH="$HOME/MasterProject/DataAndExperiments/${FOLD_FOLDER}/Experiments-${TEST_MS}/labels/"
 srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py classify $CAPS_DIR $TEST_TSV_PATH $1 $TEST_POSTFIX --bayesian $BAYESIAN --nbr_bayesian_iter $NBR_BAYESIAN_ITER --selection_metrics balanced_accuracy loss last_checkpoint --baseline False
 
+fi
+
+if [ $BAYESIAN = True ]; then
+    srun python3 $HOME/MasterProject/Code/ClinicaTools/AD-DL/clinicaaddl/clinicaaddl/main.py bayesian $1 stat
 fi
