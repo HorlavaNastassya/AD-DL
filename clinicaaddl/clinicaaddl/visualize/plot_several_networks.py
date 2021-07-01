@@ -30,7 +30,6 @@ def plot_history(args, data, fig, row, figshape):
         plot_history_ax(ax, data, mode=history_mode, aggregation_type=args.aggregation_type)
 
 
-
 def plot_results(args, data, fig, row, figshape):
     from .plot_utils import plot_results_ax, plot_results_agg_ax
     import seaborn as sns
@@ -91,25 +90,33 @@ def plot_combined_plots(args, model_params, saved_file_path, data=None):
     plt.close()
 
 
-def plot_generic(
+def plot_networks_generic(
         args,
-        training_MS,
+        training_MS, models_list
 ):
     import pathlib
     import os
     import json
     import pandas as pd
     from .data_utils import get_data_generic
+    data_list={}
 
-    currentDirectory = pathlib.Path(args.model_path)
-    path_params = os.path.join(currentDirectory, "commandline_train.json")
+    for model_path in models_list:
+        currentDirectory = pathlib.Path(model_path)
+        path_params = os.path.join(currentDirectory, "commandline_train.json")
 
-    with open(path_params, "r") as f:
-        params = json.load(f)
+        with open(path_params, "r") as f:
+            params = json.load(f)
 
-    params['training MS'] = training_MS
-    args.bayesian=params["bayesian"]
-    model_name = os.path.basename(os.path.normpath(currentDirectory))
+        params['training MS'] = training_MS
+        args.bayesian=params["bayesian"]
+        model_name = os.path.basename(os.path.normpath(currentDirectory))
+        args.model_path=model_path
+        data = get_data_generic(args)
+        for fold_key in data.keys():
+            if not fold_key in data_list.keys():
+                data_list[model_name] = {}
+            data_list[model_name]=data[fold_key][args.selection_metrics[0]]
 
     folder_name = ''
     for data_type in sorted(args.data_types):

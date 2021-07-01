@@ -29,6 +29,7 @@ if __name__ == "__main__":
     import json
     from visualize.plot import plot_generic
     from visualize.data_utils import get_data_generic
+    from visualize.plot_several_networks import plot_networks_generic
 
     folders = []
     # MS_main_list = ['1.5T', '3T', "1.5T-3T"]
@@ -37,8 +38,9 @@ if __name__ == "__main__":
     MS_list_dict = {'1.5T':['1.5T', '3T'], "3T": ['3T', '1.5T'], "1.5T-3T": ["1.5T-3T"]}
     # home_folder='/u/horlavanasta/MasterProject/'
     home_folder='/home/nastya/Documents/MasterProject/'
-    data_types=["history", "uncertainty_distribution", "results"]
-    # data_types=["results", "history"]
+    from classify.bayesian_utils import bayesian_predictions
+    # data_types=["history", "uncertainty_distribution", "results"]
+    data_types=["results", "history"]
 
     isBayesian=True
 
@@ -56,19 +58,25 @@ if __name__ == "__main__":
             modelPatter = "subject_model*"
             folders = [f for f in pathlib.Path(model_dir).glob(modelPatter)]
 
+            models_list=[]
             for f in folders[:]:
                 args=get_args(f, MS_list, data_types)
-                args.get_test_from_bayesian=True
-                args.ba_inference_mode="mode"
-                args.MS_list=MS_list
-                args.output_path=None
-                args.bayesian=isBayesian
-                args.merged_file=os.path.join(home_folder, "DataAndExperiments/Data/DataStat/merge.tsv")
-                args.result_metrics=["accuracy","sensitivity", "precision", "f1-score"]
-                args.uncertainty_metric="total_variance"
-                args.catplot_type = "violinplot"
-                args.selection_metrics=None
-                args.separate_by_MS=True
-                plot_generic(args, MS)
-                # data=get_data_generic(args, MS)
+                models_list.append(f)
+                prefixes = ["test_" + magnet_strength for magnet_strength in MS_list]
+                bayesian_predictions(model_path=f, prefixes=prefixes, function="stat")
 
+                # plot_generic(args, MS)
+                # data=get_data_generic(args, MS)
+            args.ba_inference_mode = "mean"
+            args.aggregation_type="all"
+            args.MS_list = MS_list
+            args.output_path = None
+            args.bayesian = isBayesian
+            args.merged_file = os.path.join(home_folder, "DataAndExperiments/Data/DataStat/merge.tsv")
+            args.result_metrics = ["accuracy", "sensitivity", "precision", "f1-score"]
+            args.uncertainty_metric = "total_variance"
+            args.catplot_type = "violinplot"
+            args.selection_metrics = None
+            args.separate_by_MS = True
+            args.selection_metrics="best_loss"
+            plot_networks_generic(args, MS, models_list)

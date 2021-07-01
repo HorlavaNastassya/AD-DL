@@ -84,7 +84,9 @@ def plot_results_agg_ax(ax, results, columns):
         def _show_on_single_plot(ax, factor=0.025):
             for p in ax.patches:
                 _x = p.get_x() + p.get_width() / 2
-                _y = p.get_y() + p.get_height() +ax.get_ylim()[-1]*factor
+                # _y = p.get_y() + p.get_height() +ax.get_ylim()[-1]*factor
+                _y = p.get_y() +ax.get_ylim()[-1]*factor
+
                 value = '{:.2f}'.format(p.get_height())
                 ax.text(_x, _y, value, ha="center")
 
