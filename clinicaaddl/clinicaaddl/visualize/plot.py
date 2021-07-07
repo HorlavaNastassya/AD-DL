@@ -62,7 +62,7 @@ def plot_uncertainty_distribution(args, data, fig, row, figshape):
 def plot_combined_plots(args, model_params, saved_file_path, data=None):
     import matplotlib.pyplot as plt
 
-    readable_params = ['model', 'data_augmentation', 'batch_size', 'learning_rate', "loss", 'training MS']
+    readable_params = ['learning_rate']
 
     rows_matrix, cols_matrix, num_rows, num_cols = get_rows_and_cols(data)
     fig = plt.figure(figsize=((int(8 * num_cols), int(6 * num_rows))))
@@ -74,7 +74,7 @@ def plot_combined_plots(args, model_params, saved_file_path, data=None):
 
     str_suptitle = "\n Params: "
     for i, line in enumerate(readable_params):
-        str_suptitle += line + ': ' + str(model_params[line]) + "; "
+        str_suptitle += str(model_params[line]) + "; "
     str_suptitle +="\n"
 
     plt.suptitle(str_suptitle)

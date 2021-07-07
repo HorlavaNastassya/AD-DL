@@ -186,17 +186,15 @@ def visualize_func(args):
     else:
         MS = [x.replace("Experiments-", "") for x in os.path.normpath((args.model_path)).split(os.path.sep) if
               "Experiments-" in x][0]
+        
     if MS=="1.5T-3T":
         args.separate_by_MS=True
     else:
         args.separate_by_MS=False
 
     args.MS_list=MS_list_dict[MS] if args.MS_list is None else args.MS_list
-    if args.combine_networks:
-        models_list = args.f[:-1].split(";")
-        plot_networks_generic(args, MS, models_list)
-    else:
-        plot_generic(args, training_MS=MS)
+    
+    plot_generic(args, training_MS=MS)
 
 
 def bayesian_func(args):
@@ -1183,18 +1181,18 @@ def parse_command_line():
         TRAIN_CATEGORIES["POSITIONAL"])
 
     visualise_pos_group.add_argument(
-        'model_path',
+        '--model_path',
         help='''Path to the folder where the model is stored. Folder structure
                         should be the same obtained during the training.''',
         default=None)
 
     visualise_pos_group.add_argument(
-        'output_path',
+        '--output_path',
         help='''Path to the folder where the resulting image will be saved''',
         default=None)
 
     visualise_pos_group.add_argument(
-        'data_types',
+        '--data_types',
         type=str,
         nargs="+",
         help='''What type of input do you want to use?
@@ -1272,16 +1270,6 @@ def parse_command_line():
         type=str,
         default='violinplot',
         choices=["stripplot", "violinplot", "histogram"])
-
-    visualise_pos_group.add_argument(
-        '--combine_networks',
-        help='''indicates whether to combine several networks to 1 plot''', type=str2bool,
-        default=False)
-
-    visualise_pos_group.add_argument(
-        '--hinder_titles',
-        help='''indicates whether to substitute long name with a, b, ....''', type=str2bool,
-        default=True)
 
     visualize_parser.set_defaults(func=visualize_func)
 

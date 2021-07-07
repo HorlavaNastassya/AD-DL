@@ -56,7 +56,9 @@ def plot_uncertainty_distribution(args, data, fig, row, figshape):
 
 def plot_combined_plots(args, saved_file_path, data=None):
     import matplotlib.pyplot as plt
-
+    import json
+    import os
+    
     rows_matrix, cols_matrix, num_rows, num_cols = get_rows_and_cols(data)
     fig = plt.figure(figsize=((int(8 * num_cols), int(6 * num_rows))))
 
@@ -87,7 +89,8 @@ def plot_combined_plots(args, saved_file_path, data=None):
         plt.show()
 
     plt.close()
-    print(models_dict)
+    with open(os.path.splitext(saved_file_path)[0]+'.json', "w") as f:
+        json.dump(models_dict, f)
 
 
 def plot_networks_generic(
@@ -99,9 +102,10 @@ def plot_networks_generic(
     import json
     import pandas as pd
     from .data_utils import get_data_generic
+    
     data_list={}
-    args.selection_metric=args.selection_metrics[0]
-    args.history_mode=args.history_modes[0]
+    args.selection_metrics=[args.selection_metric]
+    args.history_modes=[args.history_mode]
     for model_path in models_list:
         currentDirectory = pathlib.Path(model_path)
         path_params = os.path.join(currentDirectory, "commandline_train.json")
@@ -124,12 +128,7 @@ def plot_networks_generic(
                     data_list[fold_key][datatype_key][model_name] = data[fold_key][datatype_key]
                 else:
                     data_list[fold_key][datatype_key][model_name]= data[fold_key][datatype_key][args.selection_metric]
-
-            # data_list[model_name]=data[fold_key][args.selection_metrics[sel_key]]
-    # if "results" or "uncertainty_distribution" in (args.data_types):
-    #     folder_name = "%s-"%args.selection_metric
-    # else:
-    #     folder_name = "%s-"%args.history_mode
+                    
     folder_name=""
 
     for data_type in sorted(args.data_types):

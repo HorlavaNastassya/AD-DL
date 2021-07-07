@@ -1,5 +1,4 @@
 #!/bin/bash
-#!/bin/bash
 echo "continue for 5 folds Bayesian NNs "
 for MS in '1.5T-3T' '1.5T' '3T' 
 do
