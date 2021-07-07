@@ -1,18 +1,22 @@
 import matplotlib.pyplot as plt
 
 
-def get_rows_and_cols(data):
+def get_rows_and_cols(args, data):
     rows_matrix = {}
     cols_matrix = {}
     for data_type in data.keys():
-        if data_type == "history":
-            cols_matrix[data_type] = ["loss", "balanced_accuracy"]
-        else:
+        # if data_type == "history":
+        #     cols_matrix[data_type] = ["loss", "balanced_accuracy"]
+        # else:
+        if data_type != "history":
             cols_matrix[data_type] = [selection_metric.replace("_", " ") for selection_metric in data[data_type].keys()]
-
+        else:
+            cols_matrix[data_type]=[None]
         if data_type == "uncertainty_distribution":
             rows_matrix[data_type] = [test_MS.replace("_", " ") for test_MS in
                                       list(data[data_type][list(data[data_type].keys())[0]].groupby("mode", as_index=False, sort=False).groups.keys())]
+        elif data_type == "history":
+            rows_matrix[data_type] = [el for el in args.history_modes]
         else:
             rows_matrix[data_type] = [None]
 
@@ -24,10 +28,10 @@ def get_rows_and_cols(data):
 def plot_history(args, data, fig, row, figshape):
     from .plot_utils import plot_history_ax
 
-    for col, history_mode in enumerate(args.history_modes):
-        ax = plt.subplot2grid(shape=figshape, loc=(row, col), fig=fig)
-        plot_history_ax(ax, data, mode=history_mode, aggregation_type=args.aggregation_type)
-
+    for col in range(figshape[1]):
+        for j, history_mode in enumerate(args.history_modes):
+            ax = plt.subplot2grid(shape=figshape, loc=(row+j, col), fig=fig)
+            plot_history_ax(ax, data, mode=history_mode, aggregation_type=args.aggregation_type)
 
 
 def plot_results(args, data, fig, row, figshape):
@@ -41,8 +45,6 @@ def plot_results(args, data, fig, row, figshape):
             else:
                 plot_results_agg_ax(ax, data[selection_mode], args.result_metrics)
             ax.set_title(selection_mode)
-
-
 
 
 def plot_uncertainty_distribution(args, data, fig, row, figshape):
@@ -64,7 +66,7 @@ def plot_combined_plots(args, model_params, saved_file_path, data=None):
 
     readable_params = ['learning_rate']
 
-    rows_matrix, cols_matrix, num_rows, num_cols = get_rows_and_cols(data)
+    rows_matrix, cols_matrix, num_rows, num_cols = get_rows_and_cols(args, data)
     fig = plt.figure(figsize=((int(8 * num_cols), int(6 * num_rows))))
 
     row = 0
