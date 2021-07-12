@@ -84,15 +84,15 @@ if __name__ == "__main__":
     from visualize.data_utils import get_data_generic
     from visualize.plot_several_networks import plot_networks_generic
     from classify.bayesian_utils import bayesian_predictions
-
+    from copy import deepcopy
     folders = []
-    MS_main_list = ['1.5T', '3T', "1.5T-3T"]
+    MS_main_list = ["1.5T-3T"]
 
     MS_list_dict = {'1.5T':['1.5T', '3T'], "3T": ['3T', '1.5T'], "1.5T-3T": ["1.5T-3T"]}
-    home_folder='/u/horlavanasta/MasterProject/'
-    data_types=["history", "uncertainty_distribution", "results"]
+    home_folder='/home/nastya/Documents/MasterProject/'
+    data_types=["results"]
     isBayesian=True
-    
+
     for MS in MS_main_list:
         print("____________________________________________________________________________________________")
         model_types = ["ResNet18"]
@@ -103,6 +103,8 @@ if __name__ == "__main__":
 
         for network in model_types:
             model_dir = os.path.join(model_dir_general, network)
+            print(network)
+            print("______________________________________________________________________________-")
             # output_dir = pathlib.Path(output_dir)
             modelPatter = "subject_model*"
             folders = [f for f in pathlib.Path(model_dir).glob(modelPatter)]
@@ -116,17 +118,38 @@ if __name__ == "__main__":
                 # plot_generic(args, MS)
                 # data=get_data_generic(args, MS)
 
-            args.ba_inference_mode = "mean"
-            args.aggregation_type="separate"
-            args.MS_list = MS_list
-            args.output_path = None
-            args.bayesian = isBayesian
-            args.merged_file = os.path.join(home_folder, "DataAndExperiments/Data/DataStat/merge.tsv")
-            args.result_metrics = ["accuracy", "sensitivity", "precision", "f1-score"]
-            args.uncertainty_metric = "total_variance"
-            args.catplot_type = "violinplot"
-            args.separate_by_MS = True
-            args.selection_metrics=["best_loss"]
-            args.hinder_titles=True
-            models_list = models_list[:-1].split(";")
-            plot_networks_generic(args, MS, models_list)
+                args.ba_inference_mode = "mean"
+                args.aggregation_type="average"
+                args.MS_list = MS_list
+                args.output_path = None
+                args.bayesian = isBayesian
+                args.merged_file = os.path.join(home_folder, "DataAndExperiments/Data/DataStat/merge.tsv")
+                args.result_metrics = ["sensitivity", "precision", "accuracy", "f1-score"]
+                columns = deepcopy(args.result_metrics)
+                columns.append("mode")
+
+                args.uncertainty_metric = "total_variance"
+
+                args.separate_by_MS = True
+                args.selection_metrics=["best_balanced_accuracy", "best_loss", "last_checkpoint"]
+                data = get_data_generic(args, MS)
+                data=data["average"]["results"]
+                MS_list_printed=MS_list if not args.separate_by_MS else ["1.5T", "3T"]
+                printed_str=''
+                
+                for selection_metric in args.selection_metrics:
+                    print(selection_metric)
+                    for MS_el in MS_list_printed:
+
+                        tmp2 = data[selection_metric].loc[data[selection_metric]["mode"] == "test_%s"%MS_el][args.result_metrics]
+                        printed_str=MS_el+" & "
+                        for res_metr in args.result_metrics:
+                            printed_str=printed_str+str(tmp2[res_metr].values[0]*100)+' & '
+                        print(printed_str)
+
+
+
+
+
+
+
