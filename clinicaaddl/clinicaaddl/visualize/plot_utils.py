@@ -26,7 +26,16 @@ def plot_history_ax(ax, history, mode, aggregation_type):
         ax.set_ylim(bottom=-0.001, top=0.5)
     if mode == 'balanced_accuracy':
         ax.set_ylim(bottom=-0.001, top=1.1)
-    ax.set_title(mode)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles, labels,
+              bbox_to_anchor=(0.5, -0.1),
+              loc='upper center',
+              ncol=2
+              )
+    title=mode
+    if "_" in title:
+        title=title.replace("_", " ")
+    ax.set_title(title)
 
 def plot_results_ax(ax, results, columns):
 
@@ -122,10 +131,14 @@ def plot_results_agg_ax(ax, results, columns):
 
 def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
     import seaborn as sns
+    
+
 
     prediction_column = "predicted_label_from_%s" %inference_mode
     data["Prediction is correct"] = data.apply(
         lambda row: row["true_label"] == row[prediction_column], axis=1)
+    
+    data['true_label'].replace({0: 'CN',1:'AD'}, inplace=True)
     arguments = {"data": data, "x": "true_label", "y": uncertainty_metric,
                  "hue": "Prediction is correct", "palette": "Set2", "ax": ax,
                  "hue_order": [True, False]}
@@ -140,6 +153,13 @@ def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
         arguments["size"] = 4
         arguments["linewidth"] = 1
     getattr(sns, catplot_type)(**arguments)
+    
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles, labels,
+              bbox_to_anchor=(0.5, -0.1),
+              loc='upper center',
+              ncol=3
+              )
 
 def annotate(axes, cols, rows):
     for ax, col in zip(axes[0], cols):

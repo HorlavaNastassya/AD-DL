@@ -31,7 +31,7 @@ def set_args(args, MS, MS_list, results_dir, merged_file,  inference_mode=None):
     args.MS_list = MS_list
     args.output_path = results_dir
     args.merged_file = merged_file
-    args.result_metrics = ["accuracy", "sensitivity", "precision", "f1-score"]
+    args.result_metrics = ["sensitivity", "precision", "accuracy", "f1-score"]
     args.uncertainty_metric = "total_variance"
     args.catplot_type = "violinplot"
     args.hinder_titles=True
@@ -111,12 +111,14 @@ if __name__ == "__main__":
     from visualize.plot_several_networks import plot_networks_generic
     from classify.bayesian_utils import bayesian_predictions
 
-    MS_main_list = ['1.5T', '3T', "1.5T-3T"]
+#     MS_main_list = ['1.5T', "1.5T-3T", '3T']
+    MS_main_list = ['1.5T', "1.5T-3T"]
+
     num_folds=5
     MS_list_dict = {'1.5T':['1.5T', '3T'], "3T": ['3T', '1.5T'], "1.5T-3T": ["1.5T-3T"]}
     home_folder='/u/horlavanasta/MasterProject/'    
     merged_file=os.path.join(home_folder,"DataAndExperiments/Data/DataStat", "merge.tsv")
-    inference_modes=["mode", "mean"]
+    inference_modes=["mean"]
     args=get_args()
     
     
@@ -135,23 +137,30 @@ if __name__ == "__main__":
             model_dir = os.path.join(model_dir_general, network)
             modelPatter = "subject_model*"
             folders = [f for f in pathlib.Path(model_dir).glob(modelPatter)]
-            models_list=[]
-
-            for f in folders[:]:
-                if check_complete_test(f, num_folds=num_folds, MS_list=MS_list) and "_preprocessing-%s_"%args.preprocessing in str(f):
-                    if args.bayesian and not check_baesian_stat(f, num_folds=num_folds, MS_list=MS_list):
-                        prefixes = ["test_" + magnet_strength for magnet_strength in MS_list]
-                        bayesian_predictions(model_path=f, prefixes=prefixes, function="stat") 
-                    models_list.append(f)
-            if args.bayesian: 
-                for inference_mode in inference_modes:
-                    results_dir=os.path.join(results_folder_general, "%s_inference"%inference_mode)
-
-                    args=set_args(args,MS, MS_list, results_dir, merged_file,inference_mode)
+            
+            for augm in ["True", "False"]:
+                models_list=[]
+                results_dir=os.path.join(results_folder_general, "augm%s"%augm)
+                for f in folders[:]:
+                    if check_complete_test(f, num_folds=num_folds, MS_list=MS_list) and "_preprocessing-%s"%args.preprocessing in str(f) and "_augm%s"%augm in str(f):
+                        if args.bayesian and not check_baesian_stat(f, num_folds=num_folds, MS_list=MS_list):
+                            prefixes = ["test_" + magnet_strength for magnet_strength in MS_list]
+                            bayesian_predictions(model_path=f, prefixes=prefixes, function="stat") 
+                        models_list.append(f)
+                        
+                if args.bayesian: 
+                    if "uncertainty_distribution" in args.data_types:
+                        args.data_types.remove("uncertainty_distribution")
+                        
+                    for inference_mode in inference_modes:
+                        results_dir=os.path.join(results_dir, "%s_inference"%inference_mode)
+                        print(results_dir)
+                        args=set_args(args,MS, MS_list, results_dir, merged_file,inference_mode)
+                        plot_networks_generic(args, MS, models_list)
+                else:
+                    if "uncertainty_distribution" in args.data_types:
+                        args.data_types.remove("uncertainty_distribution")
+                    print(results_dir)
+                    args=set_args(args, MS, MS_list, results_dir, merged_file,  inference_mode=None)
                     plot_networks_generic(args, MS, models_list)
-            else:
-                if "uncertainty_distribution" in args.data_types:
-                    args.data_types.remove("uncertainty_distribution")
-                args=set_args(args, MS, MS_list, results_folder_general, merged_file,  inference_mode=None)
-                plot_networks_generic(args, MS, models_list)
                 

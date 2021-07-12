@@ -55,7 +55,7 @@ def plot_uncertainty_distribution(args, data, fig, row, figshape):
         for j, (mode, mode_group) in enumerate(data[selection_mode].groupby("mode", as_index=False, sort=False)):
             ax = plt.subplot2grid(shape=figshape, loc=(row+j, col), fig=fig)
             plot_catplot_ax(ax,mode_group, args.uncertainty_metric, args.ba_inference_mode, args.catplot_type )
-            ax.set_title(selection_mode+"; "+mode)
+            ax.set_title(mode)
             axes.append(ax)
 
     set_ylims_axes(axes)
@@ -82,10 +82,10 @@ def plot_combined_plots(args, model_params, saved_file_path, data=None):
     plt.suptitle(str_suptitle)
 
     # plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.1, hspace=0.1)
-    plt.subplots_adjust( left=0.05, right=0.95, top=0.95, bottom=0.05,hspace=0.3)
+    plt.subplots_adjust( left=0.05, right=0.95, top=0.9, bottom=0.05,hspace=0.3)
 
     if saved_file_path is not None:
-        plt.savefig(saved_file_path)
+        plt.savefig(saved_file_path, bbox_inches="tight")
     else:
         plt.show()
 
