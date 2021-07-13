@@ -136,7 +136,7 @@ if __name__ == "__main__":
                 data=data["average"]["results"]
                 MS_list_printed=MS_list if not args.separate_by_MS else ["1.5T", "3T"]
                 printed_str=''
-                
+
                 for selection_metric in args.selection_metrics:
                     print(selection_metric)
                     for MS_el in MS_list_printed:
