@@ -112,7 +112,9 @@ if __name__ == "__main__":
     from classify.bayesian_utils import bayesian_predictions
 
 #     MS_main_list = ['1.5T', "1.5T-3T", '3T']
-    MS_main_list = ['1.5T', "1.5T-3T"]
+#     MS_main_list = ['1.5T', "1.5T-3T"]
+    MS_main_list = ["3T"]
+
 
     num_folds=5
     MS_list_dict = {'1.5T':['1.5T', '3T'], "3T": ['3T', '1.5T'], "1.5T-3T": ["1.5T-3T"]}
