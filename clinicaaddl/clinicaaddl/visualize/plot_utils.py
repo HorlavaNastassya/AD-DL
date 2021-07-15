@@ -163,17 +163,12 @@ def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
     for group_name, group in data.groupby("true_label", as_index=False):
         if group['Prediction is correct'].nunique() < 2:
             # left_column_name=
-
-            dummy_col_name="Incorrect" if group['Prediction is correct'].unique()[0]=="Correct" else "Correct"
-            data = data.append(data.index[len(data) - 1], ignore_index=True)
-            data.loc[data.index[len(data) - 1], "true_label"] = group_name
-            data.loc[data.index[len(data) - 1], "Prediction is correct"] = dummy_col_name
-            data.loc[data.index[len(data) - 1], uncertainty_metric] = -np.inf
-#             row = [["dummy", None, "dummy", group_name, -np.inf,
-#                 -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, dummy_col_name]]
-#             row_df = pd.DataFrame(row, columns=data.columns)
-#             data = pd.concat([data, row_df])
-        # arguments["hue"] = "Prediction is correct"
+            dummy_col_name = "Incorrect" if group['Prediction is correct'].unique()[0] == "Correct" else "Correct"
+            tmp = pd.DataFrame(data[-1:].values, columns=data.columns)
+            tmp["true_label"] = group_name
+            tmp["Prediction is correct"] = dummy_col_name
+            tmp[uncertainty_metric] = -np.inf
+            data= data.append(tmp)
 
 
     if catplot_type == "violinplot":
