@@ -112,7 +112,7 @@ if __name__ == "__main__":
             folders = [f for f in pathlib.Path(model_dir).glob(modelPatter)]
 
             models_list=''
-            for f in folders[:1]:
+            for f in folders[4:]:
                 args=get_args(f, MS_list, data_types)
                 models_list+="%s;"%f
                 # prefixes = ["test_" + magnet_strength for magnet_strength in MS_list]
@@ -121,7 +121,7 @@ if __name__ == "__main__":
                 # data=get_data_generic(args, MS)
 
                 args.ba_inference_mode = "mean"
-                args.aggregation_type="all"
+                args.aggregation_type="separate"
                 args.MS_list = MS_list
                 args.catplot_type = "violinplot"
 
@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
                 args.separate_by_MS = True
                 args.selection_metrics=["best_balanced_accuracy", "best_loss", "last_checkpoint"]
-                args.selection_metrics=["best_balanced_accuracy"]
+                args.selection_metrics=["last_checkpoint"]
 
 
                 MS_list_printed=MS_list if not args.separate_by_MS else ["1.5T", "3T"]

@@ -155,11 +155,30 @@ def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
     data['Prediction is correct'].replace({True: 'Correct',False:'Incorrect'}, inplace=True)
 
     arguments = {"data": data, "x": "true_label", "y": uncertainty_metric,
-                 "hue": "Prediction is correct", "palette": "Set2", "ax": ax,
-                 # "hue_order": [True, False],
+                 "palette": "Set2", "ax": ax,
+                 "hue": "Prediction is correct",
+                 "hue_order": ["Correct", "Incorrect"],
                  "order":["CN", "AD"]}
 
+    for group_name, group in data.groupby("true_label", as_index=False):
+        if group['Prediction is correct'].nunique() < 2:
+            # left_column_name=
+
+            dummy_col_name="Incorrect" if group['Prediction is correct'].unique()[0]=="Correct" else "Correct"
+            # data = data.append(pd.Series(), ignore_index=True)
+            # data.loc[data.index[len(data) - 1], "true_label"] = group_name
+            # data.loc[data.index[len(data) - 1], "Prediction is correct"] = dummy_col_name
+            # data.loc[data.index[len(data) - 1], uncertainty_metric] = -2
+            row = [["dummy", None, "dummy", group_name, -np.inf,
+                -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, dummy_col_name]]
+            row_df = pd.DataFrame(row, columns=data.columns)
+            data = pd.concat([data, row_df])
+        # arguments["hue"] = "Prediction is correct"
+
+
     if catplot_type == "violinplot":
+
+        arguments["hue"]= "Prediction is correct"
         arguments["split"] = True
         arguments["scale"] = "count"
         arguments["hue_scale"] = False
@@ -174,11 +193,12 @@ def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
     getattr(sns, catplot_type)(**arguments)
     
     handles, labels = ax.get_legend_handles_labels()
-    legend=ax.legend(handles, labels,
-              bbox_to_anchor=(0.5, -0.06),
-              loc='upper center',
-              ncol=2, fontsize=18
-              )
+
+    legend = ax.legend(handles, labels,
+                       bbox_to_anchor=(0.5, -0.06),
+                       loc='upper center',
+                       ncol=2, fontsize=18
+                       )
 
     legend.get_frame().set_alpha(None)
     ax.tick_params(axis="x", labelsize=18)
