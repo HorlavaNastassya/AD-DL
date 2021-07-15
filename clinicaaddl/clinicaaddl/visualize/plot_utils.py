@@ -165,14 +165,14 @@ def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
             # left_column_name=
 
             dummy_col_name="Incorrect" if group['Prediction is correct'].unique()[0]=="Correct" else "Correct"
-            # data = data.append(pd.Series(), ignore_index=True)
-            # data.loc[data.index[len(data) - 1], "true_label"] = group_name
-            # data.loc[data.index[len(data) - 1], "Prediction is correct"] = dummy_col_name
-            # data.loc[data.index[len(data) - 1], uncertainty_metric] = -2
-            row = [["dummy", None, "dummy", group_name, -np.inf,
-                -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, dummy_col_name]]
-            row_df = pd.DataFrame(row, columns=data.columns)
-            data = pd.concat([data, row_df])
+            data = data.append(data.index[len(data) - 1], ignore_index=True)
+            data.loc[data.index[len(data) - 1], "true_label"] = group_name
+            data.loc[data.index[len(data) - 1], "Prediction is correct"] = dummy_col_name
+            data.loc[data.index[len(data) - 1], uncertainty_metric] = -np.inf
+#             row = [["dummy", None, "dummy", group_name, -np.inf,
+#                 -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, dummy_col_name]]
+#             row_df = pd.DataFrame(row, columns=data.columns)
+#             data = pd.concat([data, row_df])
         # arguments["hue"] = "Prediction is correct"
 
 
