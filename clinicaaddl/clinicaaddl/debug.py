@@ -90,8 +90,8 @@ if __name__ == "__main__":
 
     MS_list_dict = {'1.5T':['1.5T', '3T'], "3T": ['3T', '1.5T'], "1.5T-3T": ["1.5T-3T"]}
     home_folder='/home/nastya/Documents/MasterProject/'
-    # data_types=["uncertainty_distribution"]
-    data_types=["results", "history"]
+    data_types=["uncertainty_distribution"]
+    # data_types=["results", "history"]
 
     isBayesian=True
 
