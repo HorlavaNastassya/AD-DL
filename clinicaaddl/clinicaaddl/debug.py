@@ -90,7 +90,9 @@ if __name__ == "__main__":
 
     MS_list_dict = {'1.5T':['1.5T', '3T'], "3T": ['3T', '1.5T'], "1.5T-3T": ["1.5T-3T"]}
     home_folder='/home/nastya/Documents/MasterProject/'
-    data_types=["results"]
+    # data_types=["uncertainty_distribution"]
+    data_types=["results", "history"]
+
     isBayesian=True
 
     for MS in MS_main_list:
@@ -110,7 +112,7 @@ if __name__ == "__main__":
             folders = [f for f in pathlib.Path(model_dir).glob(modelPatter)]
 
             models_list=''
-            for f in folders[:]:
+            for f in folders[:1]:
                 args=get_args(f, MS_list, data_types)
                 models_list+="%s;"%f
                 # prefixes = ["test_" + magnet_strength for magnet_strength in MS_list]
@@ -119,8 +121,10 @@ if __name__ == "__main__":
                 # data=get_data_generic(args, MS)
 
                 args.ba_inference_mode = "mean"
-                args.aggregation_type="average"
+                args.aggregation_type="all"
                 args.MS_list = MS_list
+                args.catplot_type = "violinplot"
+
                 args.output_path = None
                 args.bayesian = isBayesian
                 args.merged_file = os.path.join(home_folder, "DataAndExperiments/Data/DataStat/merge.tsv")
@@ -132,20 +136,22 @@ if __name__ == "__main__":
 
                 args.separate_by_MS = True
                 args.selection_metrics=["best_balanced_accuracy", "best_loss", "last_checkpoint"]
-                data = get_data_generic(args, MS)
-                data=data["average"]["results"]
+                args.selection_metrics=["best_balanced_accuracy"]
+
+
                 MS_list_printed=MS_list if not args.separate_by_MS else ["1.5T", "3T"]
                 printed_str=''
+                plot_generic(args, MS)
 
-                for selection_metric in args.selection_metrics:
-                    print(selection_metric)
-                    for MS_el in MS_list_printed:
-
-                        tmp2 = data[selection_metric].loc[data[selection_metric]["mode"] == "test_%s"%MS_el][args.result_metrics]
-                        printed_str=MS_el+" & "
-                        for res_metr in args.result_metrics:
-                            printed_str=printed_str+str(tmp2[res_metr].values[0]*100)+' & '
-                        print(printed_str)
+                # for selection_metric in args.selection_metrics:
+                #     print(selection_metric)
+                #     for MS_el in MS_list_printed:
+                #
+                #         tmp2 = data[selection_metric].loc[data[selection_metric]["mode"] == "test_%s"%MS_el][args.result_metrics]
+                #         printed_str=MS_el+" & "
+                #         for res_metr in args.result_metrics:
+                #             printed_str=printed_str+str(tmp2[res_metr].values[0]*100)+' & '
+                #         print(printed_str)
 
 
 

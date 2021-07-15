@@ -16,8 +16,8 @@ def plot_history_ax(ax, history, mode, aggregation_type):
             best_loss_idx_train = np.where(arr == np.amax(arr))[0][0]
         return best_loss_idx_train, arr[best_loss_idx_train]
 
-    sns.lineplot(data=history, ax=ax, x="epoch", y=mode + "_train", label='train ' + mode, legend="brief")
-    sns.lineplot(data=history, ax=ax, x="epoch", y=mode + "_valid", label='validation ' + mode, legend="brief")
+    sns.lineplot(data=history, ax=ax, x="epoch", y=mode + "_train", label='train', legend="brief")
+    sns.lineplot(data=history, ax=ax, x="epoch", y=mode + "_valid", label='validation', legend="brief")
     if aggregation_type is not "all":
         idx, val = find_best(history[mode + "_valid"], mode == 'loss')
         ax.plot(idx, val, 'o', color='black')
@@ -28,14 +28,19 @@ def plot_history_ax(ax, history, mode, aggregation_type):
         ax.set_ylim(bottom=-0.001, top=1.1)
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles, labels,
-              bbox_to_anchor=(0.5, -0.1),
+              bbox_to_anchor=(0.5, -0.14),
               loc='upper center',
-              ncol=2
+              ncol=2, fontsize=18
               )
     title=mode
     if "_" in title:
         title=title.replace("_", " ")
-    ax.set_title(title)
+    # ax.set_title(title)
+    ax.tick_params(axis="x", labelsize=18)
+    ax.tick_params(axis="y", labelsize=18)
+    plt.xlabel("epoch", fontsize=18)
+    plt.ylabel(title, fontsize=18)
+
 
 def plot_results_ax(ax, results, columns):
 
@@ -84,6 +89,7 @@ def plot_results_ax(ax, results, columns):
               )
 
 
+
 def plot_results_agg_ax(ax, results, columns):
 
     def reshape_results(results, columns):
@@ -117,17 +123,24 @@ def plot_results_agg_ax(ax, results, columns):
     import pandas as pd
 
     results=reshape_results(results, columns)
+    results['mode'].replace({'test_1.5T': 'test 1.5T','test_3T':'test 3T'}, inplace=True)
+
     sns.swarmplot(data=results,hue="metric", x="mode", y="value", ax=ax, palette=sns.color_palette("Paired"),edgecolor="black", alpha=1., linewidth=1.0, dodge=True)
     results_avg=results.groupby(["mode", "metric"], as_index=False, sort=False).agg(np.mean)
     sns.barplot(data=results_avg,hue="metric", x="mode", y="value", ax=ax, palette=sns.color_palette("Paired"),edgecolor="gray",  alpha=.95, linewidth=1.5)
     show_values_on_bars(ax)
-    ax.set_ylim(bottom=-0.001, top=1.1)
+    ax.set_ylim(bottom=-0.001, top=1.05)
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[len(columns):], labels[len(columns):],
-                  bbox_to_anchor=(0.5, -0.1),
+    legend=ax.legend(handles[len(columns):], labels[len(columns):],
+                  bbox_to_anchor=(0.5, -0.06),
                   loc='upper center',
-                  ncol=3
+                  ncol=2, fontsize=18
                   )
+    legend.get_frame().set_alpha(None)
+    ax.tick_params(axis="x", labelsize=18)
+    ax.tick_params(axis="y", labelsize=18)
+    plt.ylabel("")
+
 
 def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
     import seaborn as sns
@@ -139,9 +152,12 @@ def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
         lambda row: row["true_label"] == row[prediction_column], axis=1)
     
     data['true_label'].replace({0: 'CN',1:'AD'}, inplace=True)
+    data['Prediction is correct'].replace({True: 'Correct',False:'Incorrect'}, inplace=True)
+
     arguments = {"data": data, "x": "true_label", "y": uncertainty_metric,
                  "hue": "Prediction is correct", "palette": "Set2", "ax": ax,
-                 "hue_order": [True, False]}
+                 # "hue_order": [True, False],
+                 "order":["CN", "AD"]}
 
     if catplot_type == "violinplot":
         arguments["split"] = True
@@ -155,11 +171,18 @@ def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
     getattr(sns, catplot_type)(**arguments)
     
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles, labels,
-              bbox_to_anchor=(0.5, -0.1),
+    legend=ax.legend(handles, labels,
+              bbox_to_anchor=(0.5, -0.06),
               loc='upper center',
-              ncol=3
+              ncol=2, fontsize=18
               )
+
+    legend.get_frame().set_alpha(None)
+    ax.tick_params(axis="x", labelsize=18)
+    ax.tick_params(axis="y", labelsize=18)
+    uncertainty_metric_label=uncertainty_metric.replace("_", " ")
+    plt.ylabel(uncertainty_metric_label, fontsize=18)
+
 
 def annotate(axes, cols, rows):
     for ax, col in zip(axes[0], cols):
@@ -175,7 +198,7 @@ def annotate(axes, cols, rows):
 def set_ylims_axes(axes):
 #     min_ylim=min(ax.get_ylim()[0] for ax in axes)
 #     max_ylim=max(ax.get_ylim()[1] for ax in axes)
-    min_ylim=-0.05
+    min_ylim=-0.01
     max_ylim=0.3
     for ax in axes:
         ax.set_ylim(bottom=min_ylim, top=max_ylim)

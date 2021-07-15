@@ -27,9 +27,10 @@ def get_rows_and_cols(args, data):
 
 def plot_history(args, data, fig, row, figshape):
     from .plot_utils import plot_history_ax
-
+    import seaborn as sns
     for col in range(figshape[1]):
         for j, history_mode in enumerate(args.history_modes):
+
             ax = plt.subplot2grid(shape=figshape, loc=(row+j, col), fig=fig)
             plot_history_ax(ax, data, mode=history_mode, aggregation_type=args.aggregation_type)
 
@@ -38,25 +39,31 @@ def plot_results(args, data, fig, row, figshape):
     from .plot_utils import plot_results_ax, plot_results_agg_ax
     import seaborn as sns
     for col, selection_mode in enumerate(list(data.keys())):
-        with sns.axes_style("whitegrid"):
+        with sns.axes_style("whitegrid", {"grid.linewidth": 2.5,
+                                    "axis.grid": True,
+                                          "lines.linewidth": 2.5}):
             ax = plt.subplot2grid(shape=figshape, loc=(row, col), fig=fig)
             if args.aggregation_type is not "all":
                 plot_results_ax(ax, data[selection_mode], args.result_metrics)
             else:
                 plot_results_agg_ax(ax, data[selection_mode], args.result_metrics)
-            ax.set_title(selection_mode)
+            # ax.set_title(selection_mode)
 
 
 def plot_uncertainty_distribution(args, data, fig, row, figshape):
     from .plot_utils import plot_catplot_ax, set_ylims_axes
     axes = []
-
+    import seaborn as sns
     for col, selection_mode in enumerate(list(data.keys())):
         for j, (mode, mode_group) in enumerate(data[selection_mode].groupby("mode", as_index=False, sort=False)):
-            ax = plt.subplot2grid(shape=figshape, loc=(row+j, col), fig=fig)
-            plot_catplot_ax(ax,mode_group, args.uncertainty_metric, args.ba_inference_mode, args.catplot_type )
-            ax.set_title(mode)
-            axes.append(ax)
+            with sns.axes_style("whitegrid", {"grid.linewidth": 2.5,
+                                              "axis.grid": True,
+                                              "lines.linewidth": 2.5}):
+                ax = plt.subplot2grid(shape=figshape, loc=(row+j, col), fig=fig)
+                plot_catplot_ax(ax,mode_group, args.uncertainty_metric, args.ba_inference_mode, args.catplot_type )
+                title=mode.replace("_", " ")
+                ax.set_title(title, fontsize=18)
+                axes.append(ax)
 
     set_ylims_axes(axes)
 
@@ -80,9 +87,8 @@ def plot_combined_plots(args, model_params, saved_file_path, data=None):
     str_suptitle +="\n"
 
     plt.suptitle(str_suptitle)
-
     # plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05, wspace=0.1, hspace=0.1)
-    plt.subplots_adjust( left=0.05, right=0.95, top=0.9, bottom=0.05,hspace=0.3)
+    plt.subplots_adjust( left=0.13, right=0.95, top=0.92, bottom=0.08,hspace=0.35)
 
     if saved_file_path is not None:
         plt.savefig(saved_file_path, bbox_inches="tight")
