@@ -121,7 +121,7 @@ if __name__ == "__main__":
                 # data=get_data_generic(args, MS)
 
                 args.ba_inference_mode = "mean"
-                args.aggregation_type="separate"
+                args.aggregation_type="average"
                 args.MS_list = MS_list
                 args.catplot_type = "violinplot"
 

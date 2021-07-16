@@ -145,7 +145,7 @@ def plot_results_agg_ax(ax, results, columns):
 def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
     import seaborn as sns
     
-
+    from copy import deepcopy
 
     prediction_column = "predicted_label_from_%s" %inference_mode
     data["Prediction is correct"] = data.apply(
@@ -160,6 +160,7 @@ def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
                  "hue_order": ["Correct", "Incorrect"],
                  "order":["CN", "AD"]}
 
+
     for group_name, group in data.groupby("true_label", as_index=False):
         if group['Prediction is correct'].nunique() < 2:
             # left_column_name=
@@ -172,34 +173,41 @@ def plot_catplot_ax(ax, data, uncertainty_metric, inference_mode, catplot_type):
 
 
     if catplot_type == "violinplot":
+        violinplot_arguments=arguments.copy()
+        violinplot_arguments["hue"]= "Prediction is correct"
+        violinplot_arguments["split"] = True
+        violinplot_arguments["scale"] = "count"
+        violinplot_arguments["hue_scale"] = False
 
-        arguments["hue"]= "Prediction is correct"
-        arguments["split"] = True
-        arguments["scale"] = "count"
-        arguments["hue_scale"] = False
+        violinplot_arguments["cut"] = 0
+        violinplot_arguments["bw"]=.15
 
-        arguments["cut"] = 0
-        arguments["bw"]=.15
+        swarmplot_arguments=arguments.copy()
+        swarmplot_arguments["dodge"] = True
+        swarmplot_arguments["size"] = 4
+        swarmplot_arguments["linewidth"] = 1
 
-    if catplot_type == "stripplot":
-        arguments["dodge"] = True
-        arguments["size"] = 4
-        arguments["linewidth"] = 1
-    getattr(sns, catplot_type)(**arguments)
+
+
+    getattr(sns, catplot_type)(**violinplot_arguments)
+
     
+
+    getattr(sns, "swarmplot")(**swarmplot_arguments)
+
     handles, labels = ax.get_legend_handles_labels()
 
-    legend = ax.legend(handles, labels,
+    legend = ax.legend(handles[:2], labels[:2],
                        bbox_to_anchor=(0.5, -0.06),
                        loc='upper center',
                        ncol=2, fontsize=18
                        )
-
     legend.get_frame().set_alpha(None)
     ax.tick_params(axis="x", labelsize=18)
     ax.tick_params(axis="y", labelsize=18)
     uncertainty_metric_label=uncertainty_metric.replace("_", " ")
     plt.ylabel(uncertainty_metric_label, fontsize=18)
+
 
 
 def annotate(axes, cols, rows):
