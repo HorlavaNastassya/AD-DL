@@ -2,7 +2,7 @@
 
 
 The repository contains the code of the Master theis "Robust, structure-aware classification of neurodegeneration". 
-
+The system was built based on the framework proposed in [1] and [2]. 
 
 References: 
 
